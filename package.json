@@ -1,0 +1,29 @@
+{
+  "name": "axios-har-tracker",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/axios-har-tracker.js",
+  "scripts": {
+    "prebuild": "rimraf ./dist",
+    "build": "tsc"
+  },
+  "author": "Beata Kruzycka <beata.kruzycka@finastra.com>",
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "bugs": {
+    "url": ""
+  },
+  "homepage": "https://github.com/BeataKr/axios-tracker#readme",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "0.20.0",
+    "fs": "0.0.2",
+    "cookie": "^0.4.1"
+  },
+  "devDependencies": {
+    "rimraf": "^3.0.2",
+    "typescript": "4.0.2"
+  }
+}
