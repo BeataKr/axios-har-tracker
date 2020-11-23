@@ -18,9 +18,10 @@
   "homepage": "https://github.com/BeataKr/axios-har-tracker",
   "license": "MIT",
   "dependencies": {
+    "@types/node": "^14.14.9",
     "axios": "0.20.0",
-    "fs": "0.0.2",
-    "cookie": "^0.4.1"
+    "cookie": "^0.4.1",
+    "fs": "0.0.2"
   },
   "devDependencies": {
     "rimraf": "^3.0.2",
