@@ -13,9 +13,9 @@
     "url": ""
   },
   "bugs": {
-    "url": ""
+    "url": "https://github.com/BeataKr/axios-har-tracker/issues"
   },
-  "homepage": "https://github.com/BeataKr/axios-tracker#readme",
+  "homepage": "https://github.com/BeataKr/axios-har-tracker",
   "license": "MIT",
   "dependencies": {
     "axios": "0.20.0",

@@ -2,7 +2,7 @@ const axios = require('axios').default;
 import { writeFileSync } from 'fs';
 import * as cookie from 'cookie';
 
-export class AxiosTracker {
+export class AxiosHarTracker {
 
   private date = new Date();
   private startDate = this.date.toISOString();
@@ -37,13 +37,7 @@ export class AxiosTracker {
     }
   };
 
-  private requestModule
-
-  constructor (requestModule) {
-    this.requestModule = requestModule;
-  }
-
-  private axiosTracker(call) {
+  public generateHar(call) {
     axios.interceptors.request.use(
       async config => {
         config.validateStatus = function () {
@@ -114,7 +108,7 @@ export class AxiosTracker {
       }
     );
   
-    const response = await axios(call);
+    const response = axios(call);
     return response;
   }
 
@@ -146,7 +140,6 @@ export class AxiosTracker {
       return this.transformObjectToArray(params);
     } else return [];
   }
-
 
   saveFile (filePath){
     writeFileSync(filePath, JSON.stringify(this.generatedHar), 'utf-8');
