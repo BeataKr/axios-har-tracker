@@ -7,7 +7,7 @@ export class AxiosHarTracker {
   private date = new Date();
   private startDate = this.date.toISOString();
 
-  private generatedHar = {
+  public generatedHar = {
     log: {
       version: '1.2',
       creator: {
@@ -19,7 +19,7 @@ export class AxiosHarTracker {
     }
   };
 
-  private newEntry = {
+  public newEntry = {
     request: {},
     response: {},
     startedDateTime: this.startDate,
