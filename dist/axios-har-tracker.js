@@ -28,7 +28,26 @@ class AxiosHarTracker {
                 entries: []
             }
         };
-        this.newEntry = {
+    }
+    // public newEntry = {
+    //   request: {},
+    //   response: {},
+    //   startedDateTime: this.startDate,
+    //   time: -1,
+    //   cache: {},
+    //   timings: {
+    //     blocked: -1,
+    //     dns: -1,
+    //     ssl: -1,
+    //     connect: -1,
+    //     send: 10,
+    //     wait: 10,
+    //     receive: 10,
+    //     _blocked_queueing: -1
+    //   }
+    // };
+    generateHar(call) {
+        let newEntry = {
             request: {},
             response: {},
             startedDateTime: this.startDate,
@@ -45,8 +64,6 @@ class AxiosHarTracker {
                 _blocked_queueing: -1
             }
         };
-    }
-    generateHar(call) {
         axios.interceptors.request.use((config) => __awaiter(this, void 0, void 0, function* () {
             config.validateStatus = function () {
                 return true;
@@ -54,7 +71,7 @@ class AxiosHarTracker {
             config.headers['request-startTime'] = process.hrtime();
             const fullCookie = JSON.stringify(config.headers['Cookie']);
             const version = config.httpVersion === undefined ? 'HTTP/1.1' : 'HTTP/' + config.httpVersion;
-            this.newEntry.request = {
+            newEntry.request = {
                 method: config.method,
                 url: config.url,
                 httpVersion: version,
@@ -70,7 +87,7 @@ class AxiosHarTracker {
         });
         axios.interceptors.response.use((resp) => __awaiter(this, void 0, void 0, function* () {
             if (resp) {
-                this.newEntry.response = {
+                newEntry.response = {
                     status: resp.status,
                     statusText: resp.statusText,
                     headers: this.getHeaders(resp.headers),
@@ -99,7 +116,7 @@ class AxiosHarTracker {
                         _blocked_queueing: -1
                     }
                 };
-                const enteriesContent = Object.assign({}, this.newEntry);
+                let enteriesContent = Object.assign({}, newEntry);
                 this.generatedHar.log.entries.push(enteriesContent);
                 return resp;
             }

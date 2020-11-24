@@ -7,7 +7,7 @@ export class AxiosHarTracker {
   private date = new Date();
   private startDate = this.date.toISOString();
 
-  generatedHar = {
+  public generatedHar = {
     log: {
       version: '1.2',
       creator: {
@@ -19,27 +19,47 @@ export class AxiosHarTracker {
     }
   };
 
-  newEntry = {
-    request: {},
-    response: {},
-    startedDateTime: this.startDate,
-    time: -1,
-    cache: {},
-    timings: {
-      blocked: -1,
-      dns: -1,
-      ssl: -1,
-      connect: -1,
-      send: 10,
-      wait: 10,
-      receive: 10,
-      _blocked_queueing: -1
-    }
-  };
+  // public newEntry = {
+  //   request: {},
+  //   response: {},
+  //   startedDateTime: this.startDate,
+  //   time: -1,
+  //   cache: {},
+  //   timings: {
+  //     blocked: -1,
+  //     dns: -1,
+  //     ssl: -1,
+  //     connect: -1,
+  //     send: 10,
+  //     wait: 10,
+  //     receive: 10,
+  //     _blocked_queueing: -1
+  //   }
+  // };
 
   public generateHar(call) {
+
+    let newEntry = {
+      request: {},
+      response: {},
+      startedDateTime: this.startDate,
+      time: -1,
+      cache: {},
+      timings: {
+        blocked: -1,
+        dns: -1,
+        ssl: -1,
+        connect: -1,
+        send: 10,
+        wait: 10,
+        receive: 10,
+        _blocked_queueing: -1
+      }
+    };
+
     axios.interceptors.request.use(
       async config => {
+        
         config.validateStatus = function () {
           return true;
         };
@@ -47,7 +67,7 @@ export class AxiosHarTracker {
         const fullCookie = JSON.stringify(config.headers['Cookie']);
         const version = config.httpVersion === undefined ? 'HTTP/1.1' : 'HTTP/' + config.httpVersion;
   
-        this.newEntry.request = {
+        newEntry.request = {
           method: config.method,
           url: config.url,
           httpVersion: version,
@@ -67,7 +87,7 @@ export class AxiosHarTracker {
     axios.interceptors.response.use(
       async resp => {
         if (resp) {
-          this.newEntry.response = {
+          newEntry.response = {
             status: resp.status,
             statusText: resp.statusText,
             headers: this.getHeaders(resp.headers),
@@ -98,7 +118,7 @@ export class AxiosHarTracker {
               _blocked_queueing: -1
             }
           };
-          const enteriesContent = Object.assign({}, this.newEntry);
+          let enteriesContent = Object.assign({}, newEntry);
           this.generatedHar.log.entries.push(enteriesContent);
           return resp;
         }
