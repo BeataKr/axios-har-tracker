@@ -81,6 +81,7 @@ class AxiosHarTracker {
                 headersSize: -1,
                 bodySize: -1
             };
+            console.log("DEBUG config", config);
             return config;
         }), error => {
             return Promise.reject(error);
@@ -117,6 +118,7 @@ class AxiosHarTracker {
                     }
                 };
                 let enteriesContent = Object.assign({}, newEntry);
+                console.log("DEBUG enteriesContent", enteriesContent);
                 this.generatedHar.log.entries.push(enteriesContent);
                 return resp;
             }

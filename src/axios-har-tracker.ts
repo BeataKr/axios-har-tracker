@@ -120,6 +120,7 @@ export class AxiosHarTracker {
             }
           };
           let enteriesContent = Object.assign({}, newEntry);
+          console.log("DEBUG enteriesContent", enteriesContent)
           this.generatedHar.log.entries.push(enteriesContent);
           return resp;
         }
