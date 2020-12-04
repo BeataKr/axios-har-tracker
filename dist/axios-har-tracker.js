@@ -9,61 +9,42 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AxiosHarTracker = void 0;
+exports.saveFile = exports.axiosTracker = void 0;
 const axios = require('axios').default;
 const fs_1 = require("fs");
 const cookie = require("cookie");
-class AxiosHarTracker {
-    constructor() {
-        this.date = new Date();
-        this.startDate = this.date.toISOString();
-        this.generatedHar = {
-            log: {
-                version: '1.2',
-                creator: {
-                    name: 'axios-tracker',
-                    version: '1.0.0'
-                },
-                pages: [],
-                entries: []
-            }
-        };
+const date = new Date();
+const startDate = date.toISOString();
+let generatedHar = {
+    log: {
+        version: '1.2',
+        creator: {
+            name: 'axios-tracker',
+            version: '1.0.0'
+        },
+        pages: [],
+        entries: []
     }
-    // public newEntry = {
-    //   request: {},
-    //   response: {},
-    //   startedDateTime: this.startDate,
-    //   time: -1,
-    //   cache: {},
-    //   timings: {
-    //     blocked: -1,
-    //     dns: -1,
-    //     ssl: -1,
-    //     connect: -1,
-    //     send: 10,
-    //     wait: 10,
-    //     receive: 10,
-    //     _blocked_queueing: -1
-    //   }
-    // };
-    generateHar(call) {
-        let newEntry = {
-            request: {},
-            response: {},
-            startedDateTime: this.startDate,
-            time: -1,
-            cache: {},
-            timings: {
-                blocked: -1,
-                dns: -1,
-                ssl: -1,
-                connect: -1,
-                send: 10,
-                wait: 10,
-                receive: 10,
-                _blocked_queueing: -1
-            }
-        };
+};
+let newEntry = {
+    request: {},
+    response: {},
+    startedDateTime: startDate,
+    time: -1,
+    cache: {},
+    timings: {
+        blocked: -1,
+        dns: -1,
+        ssl: -1,
+        connect: -1,
+        send: 10,
+        wait: 10,
+        receive: 10,
+        _blocked_queueing: -1
+    }
+};
+function axiosTracker(call) {
+    return __awaiter(this, void 0, void 0, function* () {
         axios.interceptors.request.use((config) => __awaiter(this, void 0, void 0, function* () {
             config.validateStatus = function () {
                 return true;
@@ -75,13 +56,12 @@ class AxiosHarTracker {
                 method: config.method,
                 url: config.url,
                 httpVersion: version,
-                cookies: this.getCookies(fullCookie),
+                cookies: getCookies(fullCookie),
                 headers: [],
-                queryString: this.getParams(config.params),
+                queryString: getParams(config.params),
                 headersSize: -1,
                 bodySize: -1
             };
-            console.log("DEBUG config", config);
             return config;
         }), error => {
             return Promise.reject(error);
@@ -91,12 +71,12 @@ class AxiosHarTracker {
                 newEntry.response = {
                     status: resp.status,
                     statusText: resp.statusText,
-                    headers: this.getHeaders(resp.headers),
+                    headers: getHeaders(resp.headers),
                     startedDateTime: new Date(resp.headers.date),
                     time: resp.headers['request-duration'] = Math.round(process.hrtime(resp.headers['request-startTime'])[0] * 1000 +
                         process.hrtime(resp.headers['request-startTime'])[1] / 1000000),
                     httpVersion: `HTTP/${resp.request.res.httpVersion}`,
-                    cookies: this.getCookies(JSON.stringify(resp.config.headers['Cookie'])),
+                    cookies: getCookies(JSON.stringify(resp.config.headers['Cookie'])),
                     bodySize: JSON.stringify(resp.data).length,
                     redirectURL: '',
                     headersSize: -1,
@@ -117,51 +97,51 @@ class AxiosHarTracker {
                         _blocked_queueing: -1
                     }
                 };
-                let enteriesContent = Object.assign({}, newEntry);
-                console.log("DEBUG enteriesContent", enteriesContent);
-                this.generatedHar.log.entries.push(enteriesContent);
+                const enteriesContent = Object.assign({}, newEntry);
+                generatedHar.log.entries.push(enteriesContent);
                 return resp;
             }
         }), error => {
             return Promise.reject(error);
         });
-        const response = axios(call);
+        function transformObjectToArray(obj) {
+            const results = Object.keys(obj).map(key => {
+                return {
+                    name: key,
+                    value: obj[key].toString()
+                };
+            });
+            return obj ? results : [];
+        }
+        function getCookies(fullCookie) {
+            if (fullCookie) {
+                const parsedCookie = cookie.parse(fullCookie);
+                return transformObjectToArray(parsedCookie);
+            }
+            else
+                return [];
+        }
+        function getParams(params) {
+            if (params !== undefined) {
+                return transformObjectToArray(params);
+            }
+            else
+                return [];
+        }
+        function getHeaders(headersObject) {
+            if (headersObject !== undefined) {
+                return transformObjectToArray(headersObject);
+            }
+            else
+                return [];
+        }
+        const response = yield axios(call);
         return response;
-    }
-    transformObjectToArray(obj) {
-        const results = Object.keys(obj).map(key => {
-            return {
-                name: key,
-                value: obj[key].toString()
-            };
-        });
-        return obj ? results : [];
-    }
-    getHeaders(headersObject) {
-        if (headersObject !== undefined) {
-            return this.transformObjectToArray(headersObject);
-        }
-        else
-            return [];
-    }
-    getCookies(fullCookie) {
-        if (fullCookie) {
-            const parsedCookie = cookie.parse(fullCookie);
-            return this.transformObjectToArray(parsedCookie);
-        }
-        else
-            return [];
-    }
-    getParams(params) {
-        if (params !== undefined) {
-            return this.transformObjectToArray(params);
-        }
-        else
-            return [];
-    }
-    saveFile(filePath) {
-        fs_1.writeFileSync(filePath, JSON.stringify(this.generatedHar), 'utf-8');
-    }
+    });
 }
-exports.AxiosHarTracker = AxiosHarTracker;
+exports.axiosTracker = axiosTracker;
+function saveFile(filePath) {
+    fs_1.writeFileSync(filePath, JSON.stringify(generatedHar), 'utf-8');
+}
+exports.saveFile = saveFile;
 //# sourceMappingURL=axios-har-tracker.js.map

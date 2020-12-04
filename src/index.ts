@@ -1,1 +1,1 @@
-export { AxiosHarTracker } from './axios-har-tracker';
+export { axiosTracker, saveFile } from './axios-har-tracker';
