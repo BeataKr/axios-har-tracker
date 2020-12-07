@@ -35,7 +35,7 @@ let newEntry = {
   }
 };
 
-export async function axiosTracker(call) {
+async function axiosTracker(call) {
   axios.interceptors.request.use(
     async config => {
       config.validateStatus = function () {
@@ -139,6 +139,8 @@ export async function axiosTracker(call) {
   return response;
 }
 
-export function saveFile(filePath: string) {
+function saveFile(filePath: string) {
   writeFileSync(filePath, JSON.stringify(generatedHar), 'utf-8');
 }
+
+export {saveFile, axiosTracker}

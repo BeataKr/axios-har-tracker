@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.saveFile = exports.axiosTracker = void 0;
+exports.axiosTracker = exports.saveFile = void 0;
 const axios = require('axios').default;
 const fs_1 = require("fs");
 const cookie = require("cookie");
