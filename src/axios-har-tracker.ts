@@ -1,6 +1,5 @@
 import { AxiosStatic, AxiosRequestConfig, AxiosPromise } from 'axios';
 import * as cookie from 'cookie';
-import fse from 'fs-extra';
 
 interface HarFile {
   log: {
@@ -138,8 +137,6 @@ export class AxiosHarTracker {
               _blocked_queueing: -1
             }
           };
-          // const enteriesContent = Object.assign({}, this.newEntry);
-          // this.generatedHar.log.entries.push(enteriesContent);
           return resp;
         }
       },
@@ -149,36 +146,12 @@ export class AxiosHarTracker {
     );
   }
 
-  // public getGeneratedHar(harName, options) {
-
-  //   Object.assign(options);
-  //   // return this.axios(options, (error, request, response) => {
-  //   return this.axios(options, () => {
-  //       const enteriesContent = Object.assign({}, this.newEntry);
-  //       this.generatedHar.log.entries.push(enteriesContent);
-  //       fse.writeFileSync(harName, JSON.stringify(this.generatedHar), 'utf-8')
-
-  //       // if (typeof options.callback === 'function') {
-  //       //   options.callback.apply(null, arguments);
-  //       // }
-  //   })
-
-  //   // fse.writeFileSync(harName, JSON.stringify(this.generatedHar), 'utf-8')
-  // }
-
-  public getGeneratedHar(harName, options?) {
-
-    Object.assign(options);
-    return this.axios(options, (error, request, response) => {
-        const enteriesContent = Object.assign({}, this.newEntry);
-        this.generatedHar.log.entries.push(enteriesContent);
-        fse.writeFileSync(harName, JSON.stringify(this.generatedHar), 'utf-8')
-    })
-
-    // fse.writeFileSync(harName, JSON.stringify(this.generatedHar), 'utf-8')
+  public getGeneratedHar() {
+    const enteriesContent = Object.assign({}, this.newEntry);
+    return this.generatedHar.log.entries.push(enteriesContent);
   }
 
-  transformObjectToArray(obj) {
+  private transformObjectToArray(obj) {
     const results = Object.keys(obj).map(key => {
       return {
         name: key,
@@ -188,27 +161,27 @@ export class AxiosHarTracker {
     return obj ? results : [];
   }
 
-  getCookies(fullCookie: string) {
+  private getCookies(fullCookie: string) {
     if (fullCookie) {
       const parsedCookie = cookie.parse(fullCookie);
       return this.transformObjectToArray(parsedCookie);
     } else return [];
   }
 
-  getParams(params) {
+  private getParams(params) {
     if (params !== undefined) {
       return this.transformObjectToArray(params);
     } else return [];
   }
 
-  getHeaders(headersObject) {
+  private getHeaders(headersObject) {
     if (headersObject !== undefined) {
       return this.transformObjectToArray(headersObject);
     } else return [];
   }
 
-  // saveFile(filePath: string) {
-  //   writeFileSync(filePath, JSON.stringify(this.generatedHar), 'utf-8');
-  // }
-
 }
+
+// export function axiosHarTracker(requestModule) {
+//   return new AxiosHarTracker(requestModule)
+// }
