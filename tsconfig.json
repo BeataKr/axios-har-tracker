@@ -8,7 +8,9 @@
       "outDir": "./dist"
     },
     "exclude": [
-      "node_modules"
+      "node_modules",
+      "test.ts",
+      "index.ts"
     ]
   }
   
