@@ -5,7 +5,8 @@
   "main": "dist/axios-har-tracker.js",
   "scripts": {
     "prebuild": "rimraf ./dist",
-    "build": "tsc"
+    "build": "tsc",
+    "test": "node dist/test.js"
   },
   "author": "Beata Kruzycka <beata.kruzycka@finastra.com>",
   "repository": {
@@ -19,6 +20,7 @@
   "license": "MIT",
   "dependencies": {
     "axios": "0.20.0",
+    "chai": "^4.2.0",
     "cookie": "^0.4.1"
   },
   "devDependencies": {

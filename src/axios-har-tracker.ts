@@ -1,43 +1,11 @@
 import { AxiosStatic, AxiosRequestConfig, AxiosPromise } from 'axios';
 import * as cookie from 'cookie';
 
-interface HarFile {
-  log: {
-    version: string,
-    creator: {
-      name: string,
-      version: string
-    },
-    pages: [],
-    entries: []
-  }
-}
-
-interface NewEntry {
-  request: {},
-  response: {},
-  startedDateTime: string,
-  time: number,
-  cache: {},
-  timings: {
-    blocked: number,
-    dns: number,
-    ssl: number,
-    connect: number,
-    send: number,
-    wait: number,
-    receive: number,
-    _blocked_queueing: number
-  }
-};
-
 export class AxiosHarTracker {
 
   private axios: AxiosStatic;
-  // private generatedHar: HarFile;
-  private generatedHar: any;
-  // private newEntry: NewEntry;
-  private newEntry: any;
+  private generatedHar;
+  private newEntry;
   private date = new Date();
   private startDate = this.date.toISOString();
 
@@ -73,8 +41,6 @@ export class AxiosHarTracker {
         _blocked_queueing: -1
       }
     };
-
-    // let config: AxiosRequestConfig;
 
     this.axios.interceptors.request.use(
       async config => {
@@ -148,7 +114,8 @@ export class AxiosHarTracker {
 
   public getGeneratedHar() {
     const enteriesContent = Object.assign({}, this.newEntry);
-    return this.generatedHar.log.entries.push(enteriesContent);
+    this.generatedHar.log.entries.push(enteriesContent);
+    return this.generatedHar;
   }
 
   private transformObjectToArray(obj) {
@@ -181,7 +148,3 @@ export class AxiosHarTracker {
   }
 
 }
-
-// export function axiosHarTracker(requestModule) {
-//   return new AxiosHarTracker(requestModule)
-// }
