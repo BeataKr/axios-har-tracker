@@ -58,7 +58,7 @@ describe('Check axios-har-tracker', () => {
       axiosMock.restore();
     });
 
-    it('should use sendRequestToApi', async () => {
+    it('should check proper form for generated har', async () => {
       trackerMock = jest.spyOn(axiosTracker, 'getGeneratedHar');
       axios.get("http://fakeUrl");
       getHar = axiosTracker.getGeneratedHar();
@@ -95,7 +95,6 @@ describe('Check axios-har-tracker', () => {
           }
       }
 
-      console.log("DEBUG array: ", getHar.log.entries[0].startedDateTime)
       expect(trackerMock).toHaveBeenCalled();
       expect(trackerMock).toHaveBeenCalledWith();
       expect(trackerMock).toReturnWith(fakeHarContent);
