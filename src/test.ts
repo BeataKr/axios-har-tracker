@@ -1,10 +1,11 @@
 import axios from 'axios';
 import { writeFileSync } from 'fs'
 import { AxiosHarTracker } from './axios-har-tracker'
-import { expect } from 'chai'
-// import * as chaiSubset from 'chai-subset'
-// chai.use(chaiSubset);
-// const { assert, expect } = chai;
+// import { expect } from 'chai'
+import * as chai from 'chai';
+import * as chaiSubset from 'chai-subset'
+chai.use(chaiSubset);
+const { assert, expect } = chai;
 
 const axiosTracker = new AxiosHarTracker(axios); 
 
