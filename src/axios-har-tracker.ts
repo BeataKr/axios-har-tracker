@@ -7,6 +7,7 @@ export class AxiosHarTracker {
   private generatedHar;
   private newEntry;
   private enteriesContent
+  private date = new Date().toISOString();
 
   constructor(requestModule: AxiosStatic) {
     this.axios = requestModule;
@@ -26,7 +27,7 @@ export class AxiosHarTracker {
     this.newEntry = {
       request: {},
       response: {},
-      startedDateTime: new Date().toISOString(),
+      startedDateTime: this.date,
       time: -1,
       cache: {},
       timings: {
@@ -76,7 +77,7 @@ export class AxiosHarTracker {
           status: resp.status,
           statusText: resp.statusText,
           headers: this.getHeaders(resp.headers),
-          startedDateTime: new Date(resp.headers.date),
+          startedDateTime : new Date(resp.headers.date),
           time: resp.headers['request-duration'] = Math.round(
             process.hrtime(resp.headers['request-startTime'])[0] * 1000 +
               process.hrtime(resp.headers['request-startTime'])[1] / 1000000
