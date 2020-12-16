@@ -6,8 +6,6 @@ export class AxiosHarTracker {
   private axios: AxiosStatic;
   private generatedHar;
   private newEntry;
-  private date = new Date();
-  private startDate = this.date.toISOString();
 
   constructor(requestModule: AxiosStatic) {
     this.axios = requestModule;
@@ -27,7 +25,7 @@ export class AxiosHarTracker {
     this.newEntry = {
       request: {},
       response: {},
-      startedDateTime: this.startDate,
+      startedDateTime: new Date().toISOString(),
       time: -1,
       cache: {},
       timings: {
@@ -110,6 +108,10 @@ export class AxiosHarTracker {
         return Promise.reject(error);
       }
     );
+  }
+
+  resetNewEntry () {
+    this.newEntry = {}
   }
 
   public getGeneratedHar() {

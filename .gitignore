@@ -1,3 +1,6 @@
 node_modules/
 .npmrc
 dist/
+coverage/
+testresults/
+*.har

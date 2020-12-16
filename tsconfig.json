@@ -9,9 +9,13 @@
     "outDir": "dist",
     "declaration": true,
     "noEmitOnError": true,
-    "typeRoots": ["./node_modules/@types"]
+    "typeRoots": ["./node_modules/@types"],
+    "allowSyntheticDefaultImports": true
   },
   "exclude": [
-    "node_modules"
+    "node_modules", "**/*.spec.ts", "jest.config.js"
+  ],
+  "include": [
+    "src"
   ]
 }
