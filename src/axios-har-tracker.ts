@@ -26,20 +26,7 @@ export class AxiosHarTracker {
 
     this.newEntry = {
       request: {},
-      response: {},
-      startedDateTime: this.date,
-      time: -1,
-      cache: {},
-      timings: {
-        blocked: -1,
-        dns: -1,
-        ssl: -1,
-        connect: -1,
-        send: 10,
-        wait: 10,
-        receive: 10,
-        _blocked_queueing: -1
-      }
+      response: {}
     };
 
     this.axios.interceptors.request.use(
@@ -67,6 +54,7 @@ export class AxiosHarTracker {
         return config;
       },
       error => {
+        this.generatedHar.log.entries.push(this.enteriesContent);
         return Promise.reject(error);
       }
     );
