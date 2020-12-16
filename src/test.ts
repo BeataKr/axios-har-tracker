@@ -1,11 +1,10 @@
 import axios from 'axios';
 import { writeFileSync } from 'fs'
 import { AxiosHarTracker } from './axios-har-tracker'
-// import { expect } from 'chai'
 import * as chai from 'chai';
 import * as chaiSubset from 'chai-subset'
 chai.use(chaiSubset);
-const { assert, expect } = chai;
+const { expect } = chai;
 
 const axiosTracker = new AxiosHarTracker(axios); 
 
@@ -16,10 +15,8 @@ async function run() {
     const generatedHar1 = axiosTracker.getGeneratedHar();
     const array1 = generatedHar1.log.entries;
     expect(array1).to.be.an('array');
-    console.log("DEBUG contentOfArray: ",array1)
-    expect(generatedHar1.log.entries).to.containSubset('status: 200');
     generatedHar1.should.containSubset('"status": 200"');
-    generatedHar1.should.not.containSubset('"status": 200"');
+    generatedHar1.should.not.containSubset('"status": 404"');
 
     const response2 = await axios.get('http://www.google.com/non-existing-page');
     console.log("2nd response", response2.status) //404
@@ -27,7 +24,8 @@ async function run() {
     const generatedHar2 = axiosTracker.getGeneratedHar();
     const array2 = generatedHar2.log.entries;
     expect(array2).to.be.an('array');
-    console.log("DEBUG generatedHar2:",generatedHar2)
+    generatedHar2.should.containSubset('"status": 200"');
+    generatedHar2.should.containSubset('"status": 404"');
 
     writeFileSync('./my-example1.har', JSON.stringify(generatedHar1), 'utf-8')
     writeFileSync('./my-example2.har', JSON.stringify(generatedHar2), 'utf-8')
