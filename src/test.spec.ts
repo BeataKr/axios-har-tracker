@@ -68,7 +68,7 @@ describe('Check axios-har-tracker', () => {
       let fakeHarContent = {
         "log": {
           "creator": {
-            "name": "axios-tracker",
+            "name": "axios-har-tracker",
                   "version": "1.0.0"
               },
               "entries": [

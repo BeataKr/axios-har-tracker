@@ -6,7 +6,7 @@ export class AxiosHarTracker {
   private axios: AxiosStatic;
   private generatedHar;
   private newEntry;
-  private enteriesContent
+  private entriesContent
   private date = new Date().toISOString();
 
   constructor(requestModule: AxiosStatic) {
@@ -16,7 +16,7 @@ export class AxiosHarTracker {
       log: {
         version: '1.2',
         creator: {
-          name: 'axios-tracker',
+          name: 'axios-har-tracker',
           version: '1.0.0'
         },
         pages: [],
@@ -26,25 +26,34 @@ export class AxiosHarTracker {
 
     this.newEntry = {
       request: {},
-      response: {}
+      response: {},
+      startedDateTime: this.date,
+      time: -1,
+      cache: {},
+      timings: {
+        blocked: -1,
+        dns: -1,
+        ssl: -1,
+        connect: -1,
+        send: 10,
+        wait: 10,
+        receive: 10,
+        _blocked_queueing: -1
+      }
     };
 
     this.axios.interceptors.request.use(
 
       async config => {
         this.resetNewEntry();
-        config.validateStatus = function () {
-          return true;
-        };
+
         config.headers['request-startTime'] = process.hrtime();
         const fullCookie = JSON.stringify(config.headers['Cookie']);
-        // const version = config.httpVersion === undefined ? 'HTTP/1.1' : 'HTTP/' + config.httpVersion;
-        const version = 'HTTP/1.1';
 
         this.newEntry.request = {
           method: config.method,
           url: config.url,
-          httpVersion: version,
+          httpVersion: 'HTTP/1.1',
           cookies: this.getCookies(fullCookie),
           headers: [],
           queryString: this.getParams(config.params),
@@ -53,13 +62,12 @@ export class AxiosHarTracker {
         };
         return config;
       },
-      error => {
-        this.generatedHar.log.entries.push(this.enteriesContent);
+      async error => {
         return Promise.reject(error);
       }
     );
 
-    this.axios.interceptors.response.use(
+    let interceptor = this.axios.interceptors.response.use(
       async resp => {
         this.newEntry.response = {
           status: resp.status,
@@ -92,15 +100,57 @@ export class AxiosHarTracker {
             _blocked_queueing: -1
           }
         };
-        this.enteriesContent = Object.assign({}, this.newEntry);
-        this.generatedHar.log.entries.push(this.enteriesContent);
+        this.entriesContent = Object.assign({}, this.newEntry);
+        this.generatedHar.log.entries.push(this.entriesContent);
         return resp;
       },
-      error => {
-        this.generatedHar.log.entries.push(this.enteriesContent);
-        return Promise.reject(error);
+      async error => {
+        console.log("DEBUG error.response.status", error.response.status);
+
+        this.errorHandler(error);
+
+        let resp = error.response;
+
+        this.newEntry.response = {
+          status: resp.status,
+          statusText: resp.statusText,
+          headers: this.getHeaders(resp.headers),
+          startedDateTime : new Date(resp.headers.date),
+          time: resp.headers['request-duration'] = Math.round(
+            process.hrtime(resp.headers['request-startTime'])[0] * 1000 +
+              process.hrtime(resp.headers['request-startTime'])[1] / 1000000
+          ),
+          httpVersion: `HTTP/${resp.request.res.httpVersion}`,
+          cookies: this.getCookies(JSON.stringify(resp.config.headers['Cookie'])),
+          bodySize: JSON.stringify(resp.data).length,
+          redirectURL: '',
+          headersSize: -1,
+          content: {
+            size: JSON.stringify(resp.data).length,
+            mimeType: resp.headers['content-type'] ? resp.headers['content-type'] : 'text/plain',
+            text: JSON.stringify(resp.data)
+          },
+          cache: {},
+          timings: {
+            blocked: -1,
+            dns: -1,
+            ssl: -1,
+            connect: -1,
+            send: 10,
+            wait: 10,
+            receive: 10,
+            _blocked_queueing: -1
+          }
+        };
+        this.entriesContent = Object.assign({}, this.newEntry);
+        this.generatedHar.log.entries.push(this.entriesContent);
+        return resp;
       }
     );
+  }
+
+  private errorHandler(error){
+    return Promise.reject(error);
   }
 
   private resetNewEntry () {

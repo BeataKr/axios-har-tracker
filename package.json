@@ -4,7 +4,7 @@
   "description": "",
   "main": "dist/axios-har-tracker.js",
   "scripts": {
-    "prebuild": "rimraf ./dist ./coverage ./testresults",
+    "prebuild": "rimraf ./dist ./coverage ./testresults ./*.har",
     "build": "tsc",
     "node_test": "node dist/test.js",
     "test": "jest",
