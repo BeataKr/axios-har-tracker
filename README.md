@@ -4,7 +4,7 @@ This library was designed for gathering HAR files from requests sent using `axio
 
 In order to use this package import it by 
 ```
-import { AxiosHarTracker } from './axios-har-tracker'
+import { AxiosHarTracker } from 'axios-har-tracker'
 ```
 and then pass `axios` package into the constructor e.g.
 ```
@@ -19,5 +19,5 @@ const generatedObject = axiosTracker.getGeneratedHar();
 ```
 Object can be saved into a file in any time using e.g.
 ```
-writeFileSync('./my-example.har', JSON.stringify(generatedObject), 'utf-8')
+writeFileSync('my-example.har', JSON.stringify(generatedObject), 'utf-8')
 ```

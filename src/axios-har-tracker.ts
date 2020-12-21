@@ -85,7 +85,7 @@ export class AxiosHarTracker {
           url: config.url,
           httpVersion: 'HTTP/1.1',
           cookies: this.getCookies(fullCookie),
-          headers: [],
+          headers: this.getHeaders(config.headers['common']),
           queryString: this.getParams(config.params),
           headersSize: -1,
           bodySize: -1
