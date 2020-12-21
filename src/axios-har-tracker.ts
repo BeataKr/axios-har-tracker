@@ -1,12 +1,42 @@
 import { AxiosStatic } from 'axios';
 import * as cookie from 'cookie';
 
+interface HarFile {
+  log: {
+    version: string,
+    creator: {
+      name: string,
+      version: string
+    },
+    pages: [],
+    entries: string[];
+  }
+};
+
+interface NewEntry {
+  request: {},
+  response: {},
+  startedDateTime: string,
+  time: number,
+  cache: {},
+  timings: {
+    blocked: number,
+    dns: number,
+    ssl: number,
+    connect: number,
+    send: number,
+    wait: number,
+    receive: number,
+    _blocked_queueing: number
+  }
+};
+
 export class AxiosHarTracker {
 
   private axios: AxiosStatic;
-  private generatedHar;
-  private newEntry;
-  private entriesContent
+  private generatedHar: HarFile;
+  private newEntry: NewEntry;
+  private entriesContent;
   private date = new Date().toISOString();
 
   constructor(requestModule: AxiosStatic) {
@@ -20,7 +50,7 @@ export class AxiosHarTracker {
           version: '1.0.0'
         },
         pages: [],
-        entries: []
+        entries: [] 
       }
     };
 
@@ -67,7 +97,7 @@ export class AxiosHarTracker {
       }
     );
 
-    let interceptor = this.axios.interceptors.response.use(
+    this.axios.interceptors.response.use(
       async resp => {
         this.newEntry.response = {
           status: resp.status,
@@ -105,12 +135,8 @@ export class AxiosHarTracker {
         return resp;
       },
       async error => {
-        console.log("DEBUG error.response.status", error.response.status);
-
         this.errorHandler(error);
-
         let resp = error.response;
-
         this.newEntry.response = {
           status: resp.status,
           statusText: resp.statusText,
