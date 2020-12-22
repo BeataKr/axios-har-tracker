@@ -36,7 +36,6 @@ export class AxiosHarTracker {
   private axios: AxiosStatic;
   private generatedHar: HarFile;
   private newEntry: NewEntry;
-  private date = new Date().toISOString();
 
   private requestObject(config) {
 
@@ -51,7 +50,6 @@ export class AxiosHarTracker {
       headersSize: -1,
       bodySize: -1
     };
-    console.log("DEBUG requestObject:", requestObject)
     return requestObject;
   }
 
@@ -117,6 +115,7 @@ export class AxiosHarTracker {
         Promise.reject(error);
         let req = error.request;
         this.newEntry.request = this.requestObject(req);
+        this.generatedHar.log.entries.push(this.newEntry);
         return req;
         // return Promise.reject(error);
       }
@@ -138,6 +137,8 @@ export class AxiosHarTracker {
       }
     );
   }
+
+  private date = new Date().toISOString();
 
   private generateNewEntry() {
     this.newEntry = {
