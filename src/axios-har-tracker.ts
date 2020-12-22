@@ -9,7 +9,7 @@ interface HarFile {
       version: string
     },
     pages: [],
-    entries: string[];
+    entries: NewEntry[];
   }
 };
 
@@ -36,8 +36,60 @@ export class AxiosHarTracker {
   private axios: AxiosStatic;
   private generatedHar: HarFile;
   private newEntry: NewEntry;
-  private entriesContent;
   private date = new Date().toISOString();
+
+  private requestObject(config) {
+
+    config.headers['request-startTime'] = process.hrtime();
+    let requestObject = {
+      method: config.method,
+      url: config.url,
+      httpVersion: 'HTTP/1.1',
+      cookies: this.getCookies(JSON.stringify(config.headers['Cookie'])),
+      headers: this.getHeaders(config.headers['common']),
+      queryString: this.getParams(config.params),
+      headersSize: -1,
+      bodySize: -1
+    };
+    console.log("DEBUG requestObject:", requestObject)
+    return requestObject;
+  }
+
+  private responseObject(response) {
+
+    let responseObject = {
+      status: response.status,
+      statusText: response.statusText,
+      headers: this.getHeaders(response.headers),
+      startedDateTime: new Date(response.headers.date),
+      time: response.headers['request-duration'] = Math.round(
+        process.hrtime(response.headers['request-startTime'])[0] * 1000 +
+        process.hrtime(response.headers['request-startTime'])[1] / 1000000
+      ),
+      httpVersion: `HTTP/${response.request.res.httpVersion}`,
+      cookies: this.getCookies(JSON.stringify(response.config.headers['Cookie'])),
+      bodySize: JSON.stringify(response.data).length,
+      redirectURL: '',
+      headersSize: -1,
+      content: {
+        size: JSON.stringify(response.data).length,
+        mimeType: response.headers['content-type'] ? response.headers['content-type'] : 'text/plain',
+        text: JSON.stringify(response.data)
+      },
+      cache: {},
+      timings: {
+        blocked: -1,
+        dns: -1,
+        ssl: -1,
+        connect: -1,
+        send: 10,
+        wait: 10,
+        receive: 10,
+        _blocked_queueing: -1
+      }
+    }
+    return responseObject;
+  }
 
   constructor(requestModule: AxiosStatic) {
     this.axios = requestModule;
@@ -50,136 +102,44 @@ export class AxiosHarTracker {
           version: '1.0.0'
         },
         pages: [],
-        entries: [] 
-      }
-    };
-
-    this.newEntry = {
-      request: {},
-      response: {},
-      startedDateTime: this.date,
-      time: -1,
-      cache: {},
-      timings: {
-        blocked: -1,
-        dns: -1,
-        ssl: -1,
-        connect: -1,
-        send: 10,
-        wait: 10,
-        receive: 10,
-        _blocked_queueing: -1
+        entries: []
       }
     };
 
     this.axios.interceptors.request.use(
 
       async config => {
-        this.resetNewEntry();
-
-        config.headers['request-startTime'] = process.hrtime();
-        const fullCookie = JSON.stringify(config.headers['Cookie']);
-
-        this.newEntry.request = {
-          method: config.method,
-          url: config.url,
-          httpVersion: 'HTTP/1.1',
-          cookies: this.getCookies(fullCookie),
-          headers: this.getHeaders(config.headers['common']),
-          queryString: this.getParams(config.params),
-          headersSize: -1,
-          bodySize: -1
-        };
+        this.generateNewEntry();
+        this.newEntry.request = this.requestObject(config);
         return config;
       },
       async error => {
-        return Promise.reject(error);
+        Promise.reject(error);
+        let req = error.request;
+        this.newEntry.request = this.requestObject(req);
+        return req;
+        // return Promise.reject(error);
       }
     );
 
     this.axios.interceptors.response.use(
       async resp => {
-        this.newEntry.response = {
-          status: resp.status,
-          statusText: resp.statusText,
-          headers: this.getHeaders(resp.headers),
-          startedDateTime : new Date(resp.headers.date),
-          time: resp.headers['request-duration'] = Math.round(
-            process.hrtime(resp.headers['request-startTime'])[0] * 1000 +
-              process.hrtime(resp.headers['request-startTime'])[1] / 1000000
-          ),
-          httpVersion: `HTTP/${resp.request.res.httpVersion}`,
-          cookies: this.getCookies(JSON.stringify(resp.config.headers['Cookie'])),
-          bodySize: JSON.stringify(resp.data).length,
-          redirectURL: '',
-          headersSize: -1,
-          content: {
-            size: JSON.stringify(resp.data).length,
-            mimeType: resp.headers['content-type'] ? resp.headers['content-type'] : 'text/plain',
-            text: JSON.stringify(resp.data)
-          },
-          cache: {},
-          timings: {
-            blocked: -1,
-            dns: -1,
-            ssl: -1,
-            connect: -1,
-            send: 10,
-            wait: 10,
-            receive: 10,
-            _blocked_queueing: -1
-          }
-        };
-        this.entriesContent = Object.assign({}, this.newEntry);
-        this.generatedHar.log.entries.push(this.entriesContent);
+        this.newEntry.response = this.responseObject(resp);
+        this.generatedHar.log.entries.push(this.newEntry);
         return resp;
       },
       async error => {
-        this.errorHandler(error);
+        Promise.reject(error);
         let resp = error.response;
-        this.newEntry.response = {
-          status: resp.status,
-          statusText: resp.statusText,
-          headers: this.getHeaders(resp.headers),
-          startedDateTime : new Date(resp.headers.date),
-          time: resp.headers['request-duration'] = Math.round(
-            process.hrtime(resp.headers['request-startTime'])[0] * 1000 +
-              process.hrtime(resp.headers['request-startTime'])[1] / 1000000
-          ),
-          httpVersion: `HTTP/${resp.request.res.httpVersion}`,
-          cookies: this.getCookies(JSON.stringify(resp.config.headers['Cookie'])),
-          bodySize: JSON.stringify(resp.data).length,
-          redirectURL: '',
-          headersSize: -1,
-          content: {
-            size: JSON.stringify(resp.data).length,
-            mimeType: resp.headers['content-type'] ? resp.headers['content-type'] : 'text/plain',
-            text: JSON.stringify(resp.data)
-          },
-          cache: {},
-          timings: {
-            blocked: -1,
-            dns: -1,
-            ssl: -1,
-            connect: -1,
-            send: 10,
-            wait: 10,
-            receive: 10,
-            _blocked_queueing: -1
-          }
-        };
-        this.entriesContent = Object.assign({}, this.newEntry);
-        this.generatedHar.log.entries.push(this.entriesContent);
+        this.newEntry.response = this.responseObject(resp);
+        this.generatedHar.log.entries.push(this.newEntry);
         return resp;
+        // return Promise.reject(error);
       }
     );
   }
 
-  private errorHandler(error){
-    return Promise.reject(error);
-  }
-
-  private resetNewEntry () {
+  private generateNewEntry() {
     this.newEntry = {
       request: {},
       response: {},
@@ -197,6 +157,7 @@ export class AxiosHarTracker {
         _blocked_queueing: -1
       }
     }
+    return this.newEntry
   }
 
   public getGeneratedHar() {

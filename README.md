@@ -2,11 +2,19 @@ This library was designed for gathering HAR files from requests sent using `axio
 
 # Usage
 
-In order to use this package import it by 
+In order to use this package install it 
+```
+npm install axios-har-tracker
+```
+and import it by 
 ```
 import { AxiosHarTracker } from 'axios-har-tracker'
 ```
-and then pass `axios` package into the constructor e.g.
+and `axios` package 
+```
+import axios from 'axios';
+```
+which will be passed into `AxiosHarTracker` constructor:
 ```
 const axiosTracker = new AxiosHarTracker(axios); 
 ```
