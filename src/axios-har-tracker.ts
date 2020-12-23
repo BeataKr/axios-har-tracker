@@ -127,8 +127,6 @@ export class AxiosHarTracker {
       async error => {
         let req = error.request;
         this.pushNewEntryRequest(req);
-        // this.newEntry.request = this.requestObject(error.request);
-        // this.generatedHar.log.entries.push(this.newEntry);
         return Promise.reject(error);
       }
     );
@@ -142,8 +140,6 @@ export class AxiosHarTracker {
       async error => {
         let resp = error.response;
         this.pushNewEntryResponse(resp);
-        // this.newEntry.response = this.responseObject(error.response);
-        // this.generatedHar.log.entries.push(this.newEntry);
         return Promise.reject(error);
       }
     );
