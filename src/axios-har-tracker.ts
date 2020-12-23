@@ -36,6 +36,7 @@ export class AxiosHarTracker {
   private axios: AxiosStatic;
   private generatedHar: HarFile;
   private newEntry: NewEntry;
+  private date = new Date().toISOString();
 
   private requestObject(config) {
 
@@ -89,6 +90,18 @@ export class AxiosHarTracker {
     return responseObject;
   }
 
+  private pushNewEntryResponse(response){
+    this.newEntry.response = this.responseObject(response);
+    this.generatedHar.log.entries.push(this.newEntry);
+    return this.newEntry.response;
+  }
+
+  private pushNewEntryRequest(request){
+    this.newEntry.request = this.requestObject(request);
+    this.generatedHar.log.entries.push(this.newEntry);
+    return this.newEntry.request;
+  }
+
   constructor(requestModule: AxiosStatic) {
     this.axios = requestModule;
 
@@ -112,12 +125,11 @@ export class AxiosHarTracker {
         return config;
       },
       async error => {
-        Promise.reject(error);
         let req = error.request;
-        this.newEntry.request = this.requestObject(req);
-        this.generatedHar.log.entries.push(this.newEntry);
-        return req;
-        // return Promise.reject(error);
+        this.pushNewEntryRequest(req);
+        // this.newEntry.request = this.requestObject(error.request);
+        // this.generatedHar.log.entries.push(this.newEntry);
+        return Promise.reject(error);
       }
     );
 
@@ -128,17 +140,14 @@ export class AxiosHarTracker {
         return resp;
       },
       async error => {
-        Promise.reject(error);
         let resp = error.response;
-        this.newEntry.response = this.responseObject(resp);
-        this.generatedHar.log.entries.push(this.newEntry);
-        return resp;
-        // return Promise.reject(error);
+        this.pushNewEntryResponse(resp);
+        // this.newEntry.response = this.responseObject(error.response);
+        // this.generatedHar.log.entries.push(this.newEntry);
+        return Promise.reject(error);
       }
     );
   }
-
-  private date = new Date().toISOString();
 
   private generateNewEntry() {
     this.newEntry = {

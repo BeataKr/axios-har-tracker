@@ -9,25 +9,25 @@ const { expect } = chai;
 const axiosTracker = new AxiosHarTracker(axios); 
 
 async function run() {
-    const response1 = await axios.get('http://www.google.com/');
-    console.log("1st response status", response1.status);
-    console.log("1st response statusMessage", response1.statusText);
+    await axios.get('http://httpstat.us/200');
+    await axios.get('http://httpstat.us/201');
+    await axios.get('http://httpstat.us/202');
 
     const generatedHar1 = axiosTracker.getGeneratedHar();
     const array1 = generatedHar1.log.entries;
     expect(array1).to.be.an('array');
     // generatedHar1.should.containSubset('"status": 200"');
     // generatedHar1.should.not.containSubset('"status": 404"');
+    writeFileSync('./my-example1.har', JSON.stringify(generatedHar1), 'utf-8')
 
-    const response2 = await axios.get('http://www.google.com/non-existing-page');
-    console.log("2nd response", response2.status);
-    console.log("2nd response statusMessage", response2.statusText);
+    await axios.get('http://httpstat.us/300');
+    await axios.get('http://httpstat.us/404');
     const generatedHar2 = axiosTracker.getGeneratedHar();
     const array2 = generatedHar2.log.entries;
     expect(array2).to.be.an('array');
-    // generatedHar2.should.containSubset('"status": 200"');
     // generatedHar2.should.containSubset('"status": 404"');
+    // generatedHar2.should.containSubset('"status": 300"');
 
-    writeFileSync('./my-example2.har', JSON.stringify(generatedHar2), 'utf-8')
+    // writeFileSync('./my-example2.har', JSON.stringify(generatedHar2), 'utf-8')
 }
 run();
