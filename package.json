@@ -6,7 +6,6 @@
   "scripts": {
     "prebuild": "rimraf ./dist ./coverage ./testresults ./*.har",
     "build": "tsc",
-    "node_test": "node dist/test.js",
     "test": "jest",
     "posttest": "node ./scripts/jest-join-coverage.js"
   },
