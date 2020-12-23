@@ -55,7 +55,7 @@ export class AxiosHarTracker {
   }
 
   private responseObject(response) {
-    if (response){
+    if (response) {
       let responseObject = {
         status: response.status,
         statusText: response.statusText,
@@ -121,15 +121,15 @@ export class AxiosHarTracker {
     }
   }
 
-  private pushNewEntryResponse(response){
+  private pushNewEntryResponse(response) {
     this.newEntry.response = this.responseObject(response);
     this.generatedHar.log.entries.push(this.newEntry);
   }
 
-  private pushNewEntryRequest(request){
+  private pushNewEntryRequest(request) {
     this.newEntry.request = this.requestObject(request);
     this.generatedHar.log.entries.push(this.newEntry);
-    console.log("DEBUG this.newEntry.request:",this.newEntry.request)
+    console.log("DEBUG this.newEntry.request:", this.newEntry.request)
   }
 
   constructor(requestModule: AxiosStatic) {
