@@ -56,38 +56,40 @@ export class AxiosHarTracker {
 
   private responseObject(response) {
 
-    let responseObject = {
-      status: response.status,
-      statusText: response.statusText,
-      headers: this.getHeaders(response.headers),
-      startedDateTime: new Date(response.headers.date),
-      time: response.headers['request-duration'] = Math.round(
-        process.hrtime(response.headers['request-startTime'])[0] * 1000 +
-        process.hrtime(response.headers['request-startTime'])[1] / 1000000
-      ),
-      httpVersion: `HTTP/${response.request.res.httpVersion}`,
-      cookies: this.getCookies(JSON.stringify(response.config.headers['Cookie'])),
-      bodySize: JSON.stringify(response.data).length,
-      redirectURL: '',
-      headersSize: -1,
-      content: {
-        size: JSON.stringify(response.data).length,
-        mimeType: response.headers['content-type'] ? response.headers['content-type'] : 'text/plain',
-        text: JSON.stringify(response.data)
-      },
-      cache: {},
-      timings: {
-        blocked: -1,
-        dns: -1,
-        ssl: -1,
-        connect: -1,
-        send: 10,
-        wait: 10,
-        receive: 10,
-        _blocked_queueing: -1
+    if (response){
+      let responseObject = {
+        status: response.status,
+        statusText: response.statusText,
+        headers: this.getHeaders(response.headers),
+        startedDateTime: new Date(response.headers.date),
+        time: response.headers['request-duration'] = Math.round(
+          process.hrtime(response.headers['request-startTime'])[0] * 1000 +
+          process.hrtime(response.headers['request-startTime'])[1] / 1000000
+        ),
+        httpVersion: 'HTTP/1.1',
+        cookies: this.getCookies(JSON.stringify(response.config.headers['Cookie'])),
+        bodySize: JSON.stringify(response.data).length,
+        redirectURL: '',
+        headersSize: -1,
+        content: {
+          size: JSON.stringify(response.data).length,
+          mimeType: response.headers['content-type'] ? response.headers['content-type'] : 'text/plain',
+          text: JSON.stringify(response.data)
+        },
+        cache: {},
+        timings: {
+          blocked: -1,
+          dns: -1,
+          ssl: -1,
+          connect: -1,
+          send: 10,
+          wait: 10,
+          receive: 10,
+          _blocked_queueing: -1
+        }
       }
+      return responseObject;
     }
-    return responseObject;
   }
 
   private pushNewEntryResponse(response){
