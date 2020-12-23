@@ -17,17 +17,16 @@ async function run() {
     const array1 = generatedHar1.log.entries;
     expect(array1).to.be.an('array');
     // generatedHar1.should.containSubset('"status": 200"');
-    // generatedHar1.should.not.containSubset('"status": 404"');
-    writeFileSync('./my-example1.har', JSON.stringify(generatedHar1), 'utf-8')
+    // generatedHar1.should.not.containSubset('"status": 201"');
+    // generatedHar1.should.not.containSubset('"status": 202"');
+    writeFileSync('my-example1.har', JSON.stringify(generatedHar1), 'utf-8')
 
     await axios.get('http://httpstat.us/300');
-    await axios.get('http://httpstat.us/404');
+    // await axios.get('http://httpstat.us/404');
     const generatedHar2 = axiosTracker.getGeneratedHar();
     const array2 = generatedHar2.log.entries;
     expect(array2).to.be.an('array');
     // generatedHar2.should.containSubset('"status": 404"');
     // generatedHar2.should.containSubset('"status": 300"');
-
-    // writeFileSync('./my-example2.har', JSON.stringify(generatedHar2), 'utf-8')
 }
 run();

@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { AxiosHarTracker } from './axios-har-tracker'
 import MockAdapter from 'axios-mock-adapter';
+import { writeFileSync } from 'fs';
 
 describe('Check axios-har-tracker', () => {
 
@@ -45,25 +46,45 @@ describe('Check axios-har-tracker', () => {
         _blocked_queueing: -1
       }
     };
-    
+
+    beforeAll(async () => {
+      axiosTracker = new AxiosHarTracker(axios);
+      // axiosMock = new MockAdapter(axios);
+      // axiosMock.onGet("http://fakeUrl").reply(200, fakeCallResponse);
+    });
 
     beforeEach(async () => {
-      axiosTracker = new AxiosHarTracker(axios);
-      axiosMock = new MockAdapter(axios);
-      axiosMock.onGet("http://fakeUrl").reply(200, fakeCallResponse);
+      // axiosMock = new MockAdapter(axios);
+      // axiosMock.onGet("http://fakeUrl").reply(200, fakeCallResponse);
     });
 
-    afterEach(() => {
-      jest.clearAllMocks();
-      axiosMock.restore();
+    afterAll(() => {
+      // jest.clearAllMocks();
+      // axiosMock.restore();
+      console.log("DEBUG getHar from afterAll",getHar)
+      writeFileSync('example.har', JSON.stringify(getHar), 'utf-8')
     });
 
-    it('should check proper form for generated har', async () => {
+    it('should get har from call which returns 200', async () => {
+      const res1 = await axios.get('http://httpstat.us/200');
+      console.log("DEBU res1:", res1)
+      getHar = axiosTracker.getGeneratedHar();
+      console.log("DEBUG getHar with 200",getHar)
+    });
+
+    it('should get har from call which returns 300', async () => {
+      const res2 = await axios.get('http://httpstat.us/300');
+      console.log("DEBU res2:", res2)
+      getHar = axiosTracker.getGeneratedHar();
+      console.log("DEBUG getHar with 200 and 300",getHar)
+    });
+
+    xit('should check proper form for generated har', async () => {
       trackerMock = jest.spyOn(axiosTracker, 'getGeneratedHar');
       axios.get("http://fakeUrl");
       getHar = axiosTracker.getGeneratedHar();
 
-      const dateString = getHar.log.entries[0].startedDateTime
+      // const dateString = getHar.log.entries[0].startedDateTime
 
       let fakeHarContent = {
         "log": {
@@ -76,7 +97,7 @@ describe('Check axios-har-tracker', () => {
                       "cache": {},
                       "request": {},
                       "response": {},
-                      "startedDateTime": dateString,
+                      "startedDateTime": '',
                       "time": -1,
                       "timings": {
                           "_blocked_queueing": -1,
