@@ -55,7 +55,6 @@ export class AxiosHarTracker {
   }
 
   private responseObject(response) {
-
     if (response){
       let responseObject = {
         status: response.status,
@@ -89,19 +88,48 @@ export class AxiosHarTracker {
         }
       }
       return responseObject;
+    } else {
+      let responseObject = {
+        status: [],
+        statusText: [],
+        headers: [],
+        startedDateTime: [],
+        time: [],
+        httpVersion: [],
+        cookies: [],
+        bodySize: 0,
+        redirectURL: '',
+        headersSize: -1,
+        content: {
+          size: 0,
+          mimeType: 'text/plain',
+          text: ''
+        },
+        cache: {},
+        timings: {
+          blocked: -1,
+          dns: -1,
+          ssl: -1,
+          connect: -1,
+          send: 10,
+          wait: 10,
+          receive: 10,
+          _blocked_queueing: -1
+        }
+      }
+      return responseObject;
     }
   }
 
   private pushNewEntryResponse(response){
     this.newEntry.response = this.responseObject(response);
     this.generatedHar.log.entries.push(this.newEntry);
-    return this.newEntry.response;
   }
 
   private pushNewEntryRequest(request){
     this.newEntry.request = this.requestObject(request);
     this.generatedHar.log.entries.push(this.newEntry);
-    return this.newEntry.request;
+    console.log("DEBUG this.newEntry.request:",this.newEntry.request)
   }
 
   constructor(requestModule: AxiosStatic) {
@@ -127,8 +155,7 @@ export class AxiosHarTracker {
         return config;
       },
       async error => {
-        let req = error.request;
-        this.pushNewEntryRequest(req);
+        this.pushNewEntryRequest(error.request);
         return Promise.reject(error);
       }
     );
@@ -140,8 +167,7 @@ export class AxiosHarTracker {
         return resp;
       },
       async error => {
-        let resp = error.response;
-        this.pushNewEntryResponse(resp);
+        this.pushNewEntryResponse(error.response);
         return Promise.reject(error);
       }
     );
