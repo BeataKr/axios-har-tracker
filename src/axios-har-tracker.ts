@@ -35,11 +35,27 @@ export class AxiosHarTracker {
 
   private axios: AxiosStatic;
   private generatedHar: HarFile;
-  private newEntry: NewEntry;
+  private date = new Date().toISOString();
+  private newEntry: NewEntry = {
+    request: {},
+    response: {},
+    startedDateTime: this.date,
+    time: -1,
+    cache: {},
+    timings: {
+      blocked: -1,
+      dns: -1,
+      ssl: -1,
+      connect: -1,
+      send: 10,
+      wait: 10,
+      receive: 10,
+      _blocked_queueing: -1
+    }
+  }
 
   constructor(requestModule: AxiosStatic) {
     this.axios = requestModule;
-
     this.generatedHar = {
       log: {
         version: '1.2',
@@ -53,9 +69,8 @@ export class AxiosHarTracker {
     };
 
     this.axios.interceptors.request.use(
-
       async config => {
-        this.generateNewEntry();
+        this.newEntry = this.generateNewEntry();
         this.newEntry.request = this.requestObject(config);
         return config;
       },
@@ -67,8 +82,7 @@ export class AxiosHarTracker {
 
     this.axios.interceptors.response.use(
       async resp => {
-        this.newEntry.response = this.responseObject(resp);
-        this.generatedHar.log.entries.push(this.newEntry);
+        this.pushNewEntryResponse(resp);
         return resp;
       },
       async error => {
@@ -78,10 +92,7 @@ export class AxiosHarTracker {
     );
   }
 
-  private date = new Date().toISOString();
-
   private requestObject(config) {
-
     config.headers['request-startTime'] = process.hrtime();
     const requestObject = {
       method: config.method,
@@ -97,70 +108,38 @@ export class AxiosHarTracker {
   }
 
   private responseObject(response) {
-    if (response) {
-      const responseObject = {
-        status: response.status,
-        statusText: response.statusText,
-        headers: this.getHeaders(response.headers),
-        startedDateTime: new Date(response.headers.date),
-        time: response.headers['request-duration'] = Math.round(
-          process.hrtime(response.headers['request-startTime'])[0] * 1000 +
-          process.hrtime(response.headers['request-startTime'])[1] / 1000000
-        ),
-        httpVersion: 'HTTP/1.1',
-        cookies: this.getCookies(JSON.stringify(response.config.headers['Cookie'])),
-        bodySize: JSON.stringify(response.data).length,
-        redirectURL: '',
-        headersSize: -1,
-        content: {
-          size: JSON.stringify(response.data).length,
-          mimeType: response.headers['content-type'] ? response.headers['content-type'] : 'text/plain',
-          text: JSON.stringify(response.data)
-        },
-        cache: {},
-        timings: {
-          blocked: -1,
-          dns: -1,
-          ssl: -1,
-          connect: -1,
-          send: 10,
-          wait: 10,
-          receive: 10,
-          _blocked_queueing: -1
-        }
+    const responseObject = {
+      status: response ? response.status: [],
+      statusText: response ? response.statusText: [],
+      headers: response ? this.getHeaders(response.headers): [],
+      startedDateTime:  response ? new Date(response.headers.date): [],
+      time:  response ? response.headers['request-duration'] = Math.round(
+        process.hrtime(response.headers['request-startTime'])[0] * 1000 +
+        process.hrtime(response.headers['request-startTime'])[1] / 1000000
+      ): [],
+      httpVersion: 'HTTP/1.1',
+      cookies:  response ? this.getCookies(JSON.stringify(response.config.headers['Cookie'])): [],
+      bodySize: response ? JSON.stringify(response.data).length: [],
+      redirectURL: '',
+      headersSize: -1,
+      content: {
+        size: response ? JSON.stringify(response.data).length: 0,
+        mimeType: response ? response.headers['content-type'] : 'text/plain',
+        text: response ? JSON.stringify(response.data): ''
+      },
+      cache: {},
+      timings: {
+        blocked: -1,
+        dns: -1,
+        ssl: -1,
+        connect: -1,
+        send: 10,
+        wait: 10,
+        receive: 10,
+        _blocked_queueing: -1
       }
-      return responseObject;
-    } else {
-      const responseObject = {
-        status: [],
-        statusText: [],
-        headers: [],
-        startedDateTime: [],
-        time: [],
-        httpVersion: [],
-        cookies: [],
-        bodySize: 0,
-        redirectURL: '',
-        headersSize: -1,
-        content: {
-          size: 0,
-          mimeType: 'text/plain',
-          text: ''
-        },
-        cache: {},
-        timings: {
-          blocked: -1,
-          dns: -1,
-          ssl: -1,
-          connect: -1,
-          send: 10,
-          wait: 10,
-          receive: 10,
-          _blocked_queueing: -1
-        }
-      }
-      return responseObject;
     }
+    return responseObject;
   }
 
   private pushNewEntryResponse(response) {
@@ -175,23 +154,6 @@ export class AxiosHarTracker {
   }
 
   private generateNewEntry() {
-    this.newEntry = {
-      request: {},
-      response: {},
-      startedDateTime: this.date,
-      time: -1,
-      cache: {},
-      timings: {
-        blocked: -1,
-        dns: -1,
-        ssl: -1,
-        connect: -1,
-        send: 10,
-        wait: 10,
-        receive: 10,
-        _blocked_queueing: -1
-      }
-    }
     return this.newEntry
   }
 
