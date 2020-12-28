@@ -14,7 +14,6 @@ describe('Check axios-har-tracker', () => {
     });
 
     afterAll(() => {
-      console.log("DEBUG getHar from afterAll",getHar)
       writeFileSync('example.har', JSON.stringify(getHar), 'utf-8')
     });
 

@@ -54,14 +54,14 @@ export class AxiosHarTracker {
     }
   }
 
-  constructor(requestModule: AxiosStatic) {
-    this.axios = requestModule;
+  constructor(axiosModule: AxiosStatic) {
+    this.axios = axiosModule;
     this.generatedHar = {
       log: {
         version: '1.2',
         creator: {
           name: 'axios-har-tracker',
-          version: '1.0.0'
+          version: '0.1.0'
         },
         pages: [],
         entries: []
@@ -71,11 +71,12 @@ export class AxiosHarTracker {
     this.axios.interceptors.request.use(
       async config => {
         this.newEntry = this.generateNewEntry();
-        this.newEntry.request = this.requestObject(config);
+        this.newEntry.request = this.returnRequestObject(config);
         return config;
       },
       async error => {
-        this.pushNewEntryRequest(error.request);
+        this.newEntry.request = this.returnRequestObject(error.request);
+        this.generatedHar.log.entries.push(this.newEntry);
         return Promise.reject(error);
       }
     );
@@ -92,7 +93,7 @@ export class AxiosHarTracker {
     );
   }
 
-  private requestObject(config) {
+  private returnRequestObject(config) {
     config.headers['request-startTime'] = process.hrtime();
     const requestObject = {
       method: config.method,
@@ -107,7 +108,7 @@ export class AxiosHarTracker {
     return requestObject;
   }
 
-  private responseObject(response) {
+  private returnResponseObject(response) {
     const responseObject = {
       status: response ? response.status: [],
       statusText: response ? response.statusText: [],
@@ -143,15 +144,14 @@ export class AxiosHarTracker {
   }
 
   private pushNewEntryResponse(response) {
-    this.newEntry.response = this.responseObject(response);
+    this.newEntry.response = this.returnResponseObject(response);
     this.generatedHar.log.entries.push(this.newEntry);
   }
 
-  private pushNewEntryRequest(request) {
-    this.newEntry.request = this.requestObject(request);
-    this.generatedHar.log.entries.push(this.newEntry);
-    console.log("DEBUG this.newEntry.request:", this.newEntry.request)
-  }
+  // private pushNewEntryRequest(request) {
+  //   this.newEntry.request = this.requestObject(request);
+  //   this.generatedHar.log.entries.push(this.newEntry);
+  // }
 
   private generateNewEntry() {
     return this.newEntry
@@ -172,10 +172,7 @@ export class AxiosHarTracker {
   }
 
   private getCookies(fullCookie: string) {
-    if (fullCookie) {
-      const parsedCookie = cookie.parse(fullCookie);
-      return this.transformObjectToArray(parsedCookie);
-    } else return [];
+    return fullCookie ? this.transformObjectToArray(cookie.parse(fullCookie)) : [];
   }
 
   private getParams(params) {
