@@ -35,24 +35,8 @@ export class AxiosHarTracker {
 
   private axios: AxiosStatic;
   private generatedHar: HarFile;
-  private date = new Date().toISOString();
-  private newEntry: NewEntry = {
-    request: {},
-    response: {},
-    startedDateTime: this.date,
-    time: -1,
-    cache: {},
-    timings: {
-      blocked: -1,
-      dns: -1,
-      ssl: -1,
-      connect: -1,
-      send: 10,
-      wait: 10,
-      receive: 10,
-      _blocked_queueing: -1
-    }
-  }
+  private date: string;
+  private newEntry: NewEntry;
 
   constructor(axiosModule: AxiosStatic) {
     this.axios = axiosModule;
@@ -67,6 +51,7 @@ export class AxiosHarTracker {
         entries: []
       }
     };
+    this.date = new Date().toISOString();
 
     this.axios.interceptors.request.use(
       async config => {
@@ -110,17 +95,17 @@ export class AxiosHarTracker {
 
   private returnResponseObject(response) {
     const responseObject = {
-      status: response ? response.status: [],
-      statusText: response ? response.statusText: [],
+      status: response ? response.status: '',
+      statusText: response ? response.statusText: '',
       headers: response ? this.getHeaders(response.headers): [],
-      startedDateTime:  response ? new Date(response.headers.date): [],
+      startedDateTime:  response ? new Date(response.headers.date): '',
       time:  response ? response.headers['request-duration'] = Math.round(
         process.hrtime(response.headers['request-startTime'])[0] * 1000 +
         process.hrtime(response.headers['request-startTime'])[1] / 1000000
-      ): [],
+      ): 0,
       httpVersion: 'HTTP/1.1',
       cookies:  response ? this.getCookies(JSON.stringify(response.config.headers['Cookie'])): [],
-      bodySize: response ? JSON.stringify(response.data).length: [],
+      bodySize: response ? JSON.stringify(response.data).length: 0,
       redirectURL: '',
       headersSize: -1,
       content: {
@@ -148,13 +133,25 @@ export class AxiosHarTracker {
     this.generatedHar.log.entries.push(this.newEntry);
   }
 
-  // private pushNewEntryRequest(request) {
-  //   this.newEntry.request = this.requestObject(request);
-  //   this.generatedHar.log.entries.push(this.newEntry);
-  // }
-
   private generateNewEntry() {
-    return this.newEntry
+    const newEntry = {
+      request: {},
+      response: {},
+      startedDateTime: this.date,
+      time: -1,
+      cache: {},
+      timings: {
+        blocked: -1,
+        dns: -1,
+        ssl: -1,
+        connect: -1,
+        send: 10,
+        wait: 10,
+        receive: 10,
+        _blocked_queueing: -1
+      }
+    };
+    return newEntry;
   }
 
   public getGeneratedHar() {
