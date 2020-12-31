@@ -61,8 +61,7 @@ export class AxiosHarTracker {
       },
       async error => {
         this.newEntry.request = this.returnRequestObject(error.request);
-        this.generatedHar.log.entries.push(this.newEntry);
-        return Promise.reject(error);
+        Promise.reject(error);
       }
     );
 
@@ -73,7 +72,7 @@ export class AxiosHarTracker {
       },
       async error => {
         this.pushNewEntryResponse(error.response);
-        return Promise.reject(error);
+        Promise.reject(error);
       }
     );
   }
@@ -97,7 +96,7 @@ export class AxiosHarTracker {
     const responseObject = {
       status: response ? response.status: '',
       statusText: response ? response.statusText: '',
-      headers: response ? this.getHeaders(response.headers): [],
+      headers: response ? this.getHeaders(response.headers): {},
       startedDateTime:  response ? new Date(response.headers.date): '',
       time:  response ? response.headers['request-duration'] = Math.round(
         process.hrtime(response.headers['request-startTime'])[0] * 1000 +
