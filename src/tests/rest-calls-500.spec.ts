@@ -10,11 +10,8 @@ describe('Check axios-har-tracker for status 500', () => {
       axiosTracker = new AxiosHarTracker(axios);
     });
 
-    beforeEach(async () => {
-    });
-
     afterAll(() => {
-      writeFileSync('example500.har', JSON.stringify(getHar), 'utf-8')
+      writeFileSync('example500.har', JSON.stringify(getHar), 'utf-8');
     });
 
     it('should get har which includes status 500 and all previous requests with responses', async () => {

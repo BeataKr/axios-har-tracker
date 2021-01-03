@@ -10,9 +10,6 @@ describe('Check axios-har-tracker for status 200 and 404', () => {
       axiosTracker = new AxiosHarTracker(axios);
     });
 
-    beforeEach(async () => {
-    });
-
     afterAll(() => {
       writeFileSync('example200404.har', JSON.stringify(getHar), 'utf-8')
     });
