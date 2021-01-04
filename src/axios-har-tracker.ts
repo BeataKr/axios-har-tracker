@@ -61,6 +61,7 @@ export class AxiosHarTracker {
       },
       async error => {
         this.newEntry.request = this.returnRequestObject(error.request);
+        this.generatedHar.log.entries.push(this.newEntry);
         Promise.reject(error);
       }
     );
