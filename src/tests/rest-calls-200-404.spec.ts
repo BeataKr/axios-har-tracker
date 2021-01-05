@@ -30,7 +30,11 @@ describe('Check axios-har-tracker for status 200 and 404', () => {
     });
 
     it('should get har which includes status 404 and all previous requests with responses', async () => {
-      await axios.get('http://httpstat.us/404');
+      try {
+        await axios.get('http://httpstat.us/404');
+      } catch(error){
+        console.log("An error appears:",error);
+      }
       getHar = axiosTracker.getGeneratedHar();
       const array = getHar.log.entries;
       expect(array[0].request).toMatchObject({

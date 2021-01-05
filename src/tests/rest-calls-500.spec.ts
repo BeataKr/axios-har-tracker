@@ -15,7 +15,11 @@ describe('Check axios-har-tracker for status 500', () => {
     });
 
     it('should get har which includes status 500 and all previous requests with responses', async () => {
-      await axios.get('http://httpstat.us/500');
+      try{
+        await axios.get('http://httpstat.us/500');
+      } catch(error){
+        console.log("An error appears:",error);
+      }
       getHar = axiosTracker.getGeneratedHar();
       const array = getHar.log.entries;
       expect(array[0].request).toMatchObject({

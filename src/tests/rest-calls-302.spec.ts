@@ -1,7 +1,6 @@
 import axios from 'axios';
 import { AxiosHarTracker } from '../axios-har-tracker'
 import { writeFileSync } from 'fs';
-import * as https from 'https';
 
 describe('Check axios-har-tracker', () => {
 
@@ -16,7 +15,11 @@ describe('Check axios-har-tracker', () => {
     });
 
     it('should get har which includes status 302 and previous request with a response', async () => {
-      await axios.get('http://httpstat.us/302');
+      try{
+        await axios.get('http://httpstat.us/302');
+      } catch(error){
+        console.log("An error appears:",error);
+      }
       getHar = axiosTracker.getGeneratedHar();
       const array = getHar.log.entries;
       expect(array[0].request).toMatchObject({

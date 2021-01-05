@@ -54,6 +54,7 @@ export class AxiosHarTracker {
     this.date = new Date().toISOString();
 
     this.axios.interceptors.request.use(
+
       async config => {
         this.newEntry = this.generateNewEntry();
         this.newEntry.request = this.returnRequestObject(config);
@@ -79,7 +80,9 @@ export class AxiosHarTracker {
   }
 
   private returnRequestObject(config) {
-    config.headers['request-startTime'] = process.hrtime();
+    const form = new URLSearchParams();
+    form.append('request-startTime', this.date);
+    form.append('request-duration', this.date);
     const requestObject = {
       method: config.method,
       url: config.url,
@@ -95,23 +98,23 @@ export class AxiosHarTracker {
 
   private returnResponseObject(response) {
     const responseObject = {
-      status: response ? response.status: '',
-      statusText: response ? response.statusText: '',
-      headers: response ? this.getHeaders(response.headers): {},
-      startedDateTime:  response ? new Date(response.headers.date): '',
-      time:  response ? response.headers['request-duration'] = Math.round(
-        process.hrtime(response.headers['request-startTime'])[0] * 1000 +
-        process.hrtime(response.headers['request-startTime'])[1] / 1000000
-      ): 0,
+      status: response ? response.status : '',
+      statusText: response ? response.statusText : '',
+      headers: response ? this.getHeaders(response.headers) : {},
+      startedDateTime: this.date,
+      time: response ? response['request-duration'] = Math.round(
+        process.hrtime(response['request-startTime'])[0] * 1000 +
+        process.hrtime(response['request-startTime'])[1] / 1000000
+      ) : 0,
       httpVersion: 'HTTP/1.1',
-      cookies:  response ? this.getCookies(JSON.stringify(response.config.headers['Cookie'])): [],
-      bodySize: response ? JSON.stringify(response.data).length: 0,
+      cookies: response ? this.getCookies(JSON.stringify(response.config.headers['Cookie'])) : [],
+      bodySize: response ? JSON.stringify(response.data).length : 0,
       redirectURL: '',
       headersSize: -1,
       content: {
-        size: response ? JSON.stringify(response.data).length: 0,
+        size: response ? JSON.stringify(response.data).length : 0,
         mimeType: response ? response.headers['content-type'] : 'text/plain',
-        text: response ? JSON.stringify(response.data): ''
+        text: response ? JSON.stringify(response.data) : ''
       },
       cache: {},
       timings: {
@@ -131,6 +134,7 @@ export class AxiosHarTracker {
   private pushNewEntryResponse(response) {
     this.newEntry.response = this.returnResponseObject(response);
     this.generatedHar.log.entries.push(this.newEntry);
+    return this.generatedHar
   }
 
   private generateNewEntry() {
