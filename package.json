@@ -1,6 +1,6 @@
 {
   "name": "axios-har-tracker",
-  "version": "0.1.0",
+  "version": "0.1.0-alpha",
   "description": "",
   "main": "dist/axios-har-tracker.js",
   "scripts": {
@@ -28,8 +28,6 @@
     "@types/node": "12.12.2",
     "@types/tough-cookie": "2.3.2",
     "axios-mock-adapter": "^1.19.0",
-    "chai": "^4.0.0-canary.2",
-    "chai-subset": "^1.6.0",
     "fs": "0.0.2",
     "globby": "^11.0.1",
     "istanbul-api": "^3.0.0",
@@ -37,7 +35,6 @@
     "jest-junit": "^12.0.0",
     "path": "^0.12.7",
     "rimraf": "^3.0.2",
-    "sinon": "^9.2.2",
     "ts-jest": "^26.4.4",
     "typescript": "4.0.2",
     "jest": "^26.6.3"
