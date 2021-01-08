@@ -112,9 +112,9 @@ export class AxiosHarTracker {
       redirectURL: '',
       headersSize: -1,
       content: {
-        size: response ? JSON.stringify(response.data).length : 0,
-        mimeType: response ? response.headers['content-type'] : 'text/plain',
-        text: response ? JSON.stringify(response.data) : ''
+        size: response.data ? JSON.stringify(response.data).length : 0,
+        mimeType: response.headers['content-type'] ? response.headers['content-type'] : 'text/plain',
+        text: response.data ? JSON.stringify(response.data) : ''
       },
       cache: {},
       timings: {
