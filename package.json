@@ -7,7 +7,8 @@
     "prebuild": "rimraf ./dist ./coverage ./testresults ./*.har",
     "build": "tsc",
     "test": "jest",
-    "posttest": "node ./scripts/jest-join-coverage.js"
+    "posttest": "node ./scripts/jest-join-coverage.js",
+    "prepublish": "npm run build"
   },
   "author": "Beata Kruzycka <beata.kruzycka@finastra.com>",
   "repository": {
