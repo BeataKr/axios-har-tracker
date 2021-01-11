@@ -1,17 +1,12 @@
 import axios from 'axios';
 import { AxiosHarTracker } from '../axios-har-tracker'
-import { writeFileSync } from 'fs';
 
 describe('Check axios-har-tracker for status 500', () => {
 
-    let axiosTracker, generatedHar
+    let axiosTracker
 
     beforeAll(async () => {
       axiosTracker = new AxiosHarTracker(axios);
-    });
-
-    afterAll(() => {
-      writeFileSync('example-multiple.har', JSON.stringify(generatedHar), 'utf-8');
     });
 
     it('should collect multiple calls', async () => {
@@ -26,7 +21,7 @@ describe('Check axios-har-tracker for status 500', () => {
       } catch (error) {
         console.log("An error appears:", error);
       }
-      generatedHar = axiosTracker.getGeneratedHar();
+      const generatedHar = axiosTracker.getGeneratedHar();
       const array = generatedHar.log.entries;
       expect(array[0].request).toMatchObject({
         "method": "get",
