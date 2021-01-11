@@ -51,7 +51,6 @@ export class AxiosHarTracker {
         entries: []
       }
     };
-    this.date = new Date().toISOString();
 
     this.axios.interceptors.request.use(
 
@@ -61,8 +60,10 @@ export class AxiosHarTracker {
         return config;
       },
       async error => {
-        this.newEntry.request = this.returnRequestObject(error.request);
-        this.generatedHar.log.entries.push(this.newEntry);
+        if (error.request) {
+          this.newEntry.request = this.returnRequestObject(error.request);
+          this.generatedHar.log.entries.push(this.newEntry);
+        }
         return Promise.reject(error);
       }
     );
@@ -73,16 +74,19 @@ export class AxiosHarTracker {
         return resp;
       },
       async error => {
-        this.pushNewEntryResponse(error.response);
+        if (error.response) {
+          this.pushNewEntryResponse(error.response);
+        }
         return Promise.reject(error);
       }
     );
   }
 
   private returnRequestObject(config) {
+    this.date = new Date().toISOString();
     const form = new URLSearchParams();
-    form.append('request-startTime', this.date);
-    form.append('request-duration', this.date);
+    form.append(config.headers['request-startTime'], this.date);
+    form.append(config.headers['request-duration'], this.date);
     const requestObject = {
       method: config.method,
       url: config.url,
@@ -98,17 +102,17 @@ export class AxiosHarTracker {
 
   private returnResponseObject(response) {
     const responseObject = {
-      status: response ? response.status : '',
-      statusText: response ? response.statusText : '',
-      headers: response ? this.getHeaders(response.headers) : {},
-      startedDateTime: this.date,
-      time: response ? response['request-duration'] = Math.round(
-        process.hrtime(response['request-startTime'])[0] * 1000 +
-        process.hrtime(response['request-startTime'])[1] / 1000000
+      status: response.status ? response.status : '',
+      statusText: response.statusText ? response.statusText : '',
+      headers: response.headers ? this.getHeaders(response.headers) : {},
+      startedDateTime: new Date().toISOString(),
+      time: response ? response.headers['request-duration'] = Math.round(
+        process.hrtime(response.headers['request-startTime'])[0] * 1000 +
+        process.hrtime(response.headers['request-startTime'])[1] / 1000000
       ) : 0,
       httpVersion: 'HTTP/1.1',
-      cookies: response ? this.getCookies(JSON.stringify(response.config.headers['Cookie'])) : [],
-      bodySize: response ? JSON.stringify(response.data).length : 0,
+      cookies: response.config.headers['Cookie'] ? this.getCookies(JSON.stringify(response.config.headers['Cookie'])) : [],
+      bodySize: response.data ? JSON.stringify(response.data).length : 0,
       redirectURL: '',
       headersSize: -1,
       content: {
@@ -141,7 +145,7 @@ export class AxiosHarTracker {
     const newEntry = {
       request: {},
       response: {},
-      startedDateTime: this.date,
+      startedDateTime: new Date().toISOString(),
       time: -1,
       cache: {},
       timings: {
