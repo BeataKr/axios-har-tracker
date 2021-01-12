@@ -76,9 +76,7 @@ describe('Check axios-har-tracker', () => {
     it('should check proper form for generated har', async () => {
       trackerMock = jest.spyOn(axiosTracker, 'getGeneratedHar');
       const resp = await axios.get('http://fakeUrl');
-      console.log("DEBUG response:",resp)
       getHar = await axiosTracker.getGeneratedHar();
-      console.log("DEBUG getHar:",getHar)
 
       let fakeHarContent = {
         "log": {
