@@ -60,7 +60,7 @@ export class AxiosHarTracker {
         return config;
       },
       async error => {
-        if (error.request) {
+        if (error.request || this.isNetworkError(error)) { 
           this.newEntry.request = this.returnRequestObject(error.request);
           this.generatedHar.log.entries.push(this.newEntry);
         }
@@ -77,9 +77,16 @@ export class AxiosHarTracker {
         if (error.response) {
           this.pushNewEntryResponse(error.response);
         }
+        if (this.isNetworkError(error)) {
+          this.pushNewEntryResponse(error);
+        }
         return Promise.reject(error);
       }
     );
+  }
+
+  private isNetworkError(err) {
+    return !!err.isAxiosError && !err.response;
   }
 
   private returnRequestObject(config) {
@@ -106,7 +113,7 @@ export class AxiosHarTracker {
       statusText: response.statusText ? response.statusText : '',
       headers: response.headers ? this.getHeaders(response.headers) : {},
       startedDateTime: new Date().toISOString(),
-      time: response ? response.headers['request-duration'] = Math.round(
+      time: response.headers ? response.headers['request-duration'] = Math.round(
         process.hrtime(response.headers['request-startTime'])[0] * 1000 +
         process.hrtime(response.headers['request-startTime'])[1] / 1000000
       ) : 0,
@@ -117,7 +124,7 @@ export class AxiosHarTracker {
       headersSize: -1,
       content: {
         size: response.data ? JSON.stringify(response.data).length : 0,
-        mimeType: response.headers['content-type'] ? response.headers['content-type'] : 'text/plain',
+        mimeType: response.headers ? response.headers['content-type'] : 'text/plain',
         text: response.data ? JSON.stringify(response.data) : ''
       },
       cache: {},
@@ -138,7 +145,6 @@ export class AxiosHarTracker {
   private pushNewEntryResponse(response) {
     this.newEntry.response = this.returnResponseObject(response);
     this.generatedHar.log.entries.push(this.newEntry);
-    return this.generatedHar
   }
 
   private generateNewEntry() {

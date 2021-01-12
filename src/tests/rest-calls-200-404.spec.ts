@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { AxiosHarTracker } from '../axios-har-tracker'
+import { writeFileSync } from 'fs';
 
 describe('Check axios-har-tracker for status 200 and 404', () => {
 
@@ -13,7 +14,6 @@ describe('Check axios-har-tracker for status 200 and 404', () => {
   it('should collect call with status 200', async () => {
     await axios.get('http://httpstat.us/200');
     const generatedHar = axiosTracker1.getGeneratedHar();
-    console.log("DEBUG generatedHar after 200:", generatedHar);
     const array = generatedHar.log.entries;
     expect(array[0].request).toMatchObject({
       "method": "get",
@@ -30,10 +30,9 @@ describe('Check axios-har-tracker for status 200 and 404', () => {
     try {
       await axios.get('http://httpstat.us/404');
     } catch (error) {
-      console.log("An error appears:", error);
+      console.log("An error appears after call to http:\/\/httpstat.us\/404:", error);
     }
     const generatedHar = axiosTracker1.getGeneratedHar();
-    console.log("DEBUG generatedHar after 404:", generatedHar);
     const array = generatedHar.log.entries;
     expect(array[0].request).toMatchObject({
       "method": "get",
@@ -51,10 +50,9 @@ describe('Check axios-har-tracker for status 200 and 404', () => {
     try {
       await axios.get('http://httpstat.us/404');
     } catch (error) {
-      console.log("An error appears:", error);
+      console.log("An error appears after call to http:\/\/httpstat.us\/404:", error);
     }
     const generatedHar = axiosTracker2.getGeneratedHar();
-    console.log("DEBUG generatedHar after 200 and 404:", generatedHar);
     const array = generatedHar.log.entries;
     expect(array[0].request).toMatchObject({
       "method": "get",
@@ -74,6 +72,5 @@ describe('Check axios-har-tracker for status 200 and 404', () => {
     });
     expect(array.length).toBe(2);
   });
-
 
 });
