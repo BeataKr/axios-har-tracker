@@ -84,4 +84,21 @@ describe('Check axios-har-tracker for status 500', () => {
     writeFileSync('example-200400.har', JSON.stringify(newGeneratedHar), 'utf-8');
   });
 
+  it('should collect call with status 302 - reject unauthorized', async () => {
+    try {
+      await axios.get('http://httpstat.us/302');
+    } catch (error) {
+      console.log("An error appears after call to https:\/\/httpstat.us\/302:", error);
+    }
+    const generatedHar = axiosTracker.getGeneratedHar();
+    const array = generatedHar.log.entries;
+    expect(array[0].request).toMatchObject({
+      "method": "get",
+      "url": "http://httpstat.us/302"
+    });
+    expect(array.length).toBe(1);
+
+    writeFileSync('example-302.har', JSON.stringify(generatedHar), 'utf-8')
+  });
+
 });
