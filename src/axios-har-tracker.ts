@@ -60,7 +60,7 @@ export class AxiosHarTracker {
         return config;
       },
       async error => {
-        if (error.request || this.isNetworkError(error)) { 
+        if (error.request || this.isNetworkError(error)) {
           this.newEntry.request = this.returnRequestObject(error.request);
           this.generatedHar.log.entries.push(this.newEntry);
         }
@@ -86,14 +86,13 @@ export class AxiosHarTracker {
   }
 
   private isNetworkError(err) {
-    return !!err.isAxiosError && !err.response;
+    return err.isAxiosError && !err.response;
   }
 
   private returnRequestObject(config) {
     this.date = new Date().toISOString();
-    const form = new URLSearchParams();
-    form.append(config.headers['request-startTime'], this.date);
-    form.append(config.headers['request-duration'], this.date);
+    Object.assign(config.headers['request-startTime'], new Date().toISOString());
+    Object.assign(config.headers['request-duration'], new Date().toISOString());
     const requestObject = {
       method: config.method,
       url: config.url,
@@ -111,7 +110,7 @@ export class AxiosHarTracker {
     const responseObject = {
       status: response.status ? response.status : '',
       statusText: response.statusText ? response.statusText : '',
-      headers: response.headers ? this.getHeaders(response.headers) : {},
+      headers: response.headers ? this.getHeaders(response.headers) : [],
       startedDateTime: new Date().toISOString(),
       time: response.headers ? response.headers['request-duration'] = Math.round(
         process.hrtime(response.headers['request-startTime'])[0] * 1000 +
@@ -124,7 +123,7 @@ export class AxiosHarTracker {
       headersSize: -1,
       content: {
         size: response.data ? JSON.stringify(response.data).length : 0,
-        mimeType: response.headers ? response.headers['content-type'] : 'text/plain',
+        mimeType: response.headers ? response.headers['content-type'] : 'text/html; charset=utf-8',
         text: response.data ? JSON.stringify(response.data) : ''
       },
       cache: {},
