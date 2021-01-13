@@ -35,7 +35,6 @@ export class AxiosHarTracker {
 
   private axios: AxiosStatic;
   private generatedHar: HarFile;
-  private date: string;
   private newEntry: NewEntry;
 
   constructor(axiosModule: AxiosStatic) {
@@ -90,9 +89,6 @@ export class AxiosHarTracker {
   }
 
   private returnRequestObject(config) {
-    this.date = new Date().toISOString();
-    Object.assign(config.headers['request-startTime'], new Date().toISOString());
-    Object.assign(config.headers['request-duration'], new Date().toISOString());
     const requestObject = {
       method: config.method,
       url: config.url,
