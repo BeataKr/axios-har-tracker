@@ -119,7 +119,7 @@ export class AxiosHarTracker {
       headersSize: -1,
       content: {
         size: response.data ? JSON.stringify(response.data).length : 0,
-        mimeType: response.headers ? response.headers['content-type'] : 'text/html; charset=utf-8',
+        mimeType: this.getMimeType(response),
         text: response.data ? JSON.stringify(response.data) : ''
       },
       cache: {},
@@ -135,6 +135,14 @@ export class AxiosHarTracker {
       }
     }
     return responseObject;
+  }
+
+  private getMimeType(resp) {
+    if (resp.headers === undefined) {
+      return 'text/html'
+    } else if (resp.headers['content-type']) {
+      return resp.headers['content-type']
+    } else return 'text/html'
   }
 
   private pushNewEntryResponse(response) {
