@@ -1,11 +1,15 @@
 {
   "name": "axios-har-tracker",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "",
   "main": "dist/axios-har-tracker.js",
   "scripts": {
-    "prebuild": "rimraf ./dist",
-    "build": "tsc"
+    "prebuild": "rimraf ./dist ./coverage ./testresults ./harfiles",
+    "build": "tsc",
+    "test": "jest",
+    "pretest":  "rimraf ./harfiles",
+    "posttest": "node ./scripts/jest-join-coverage.js",
+    "prepublish": "npm run build"
   },
   "author": "Beata Kruzycka <beata.kruzycka@finastra.com>",
   "repository": {
@@ -18,13 +22,22 @@
   "homepage": "https://github.com/BeataKr/axios-har-tracker",
   "license": "MIT",
   "dependencies": {
-    "@types/node": "^14.14.9",
-    "axios": "0.20.0",
-    "cookie": "^0.4.1",
-    "fs": "0.0.2"
+    "axios": "0.21.1",
+    "cookie": "^0.4.1"
   },
   "devDependencies": {
+    "@types/jest": "^26.0.19",
+    "@types/node": "12.12.2",
+    "@types/tough-cookie": "2.3.2",
+    "globby": "^11.0.1",
+    "istanbul-api": "^3.0.0",
+    "istanbul-lib-coverage": "^3.0.0",
+    "jest-junit": "^12.0.0",
+    "path": "^0.12.7",
     "rimraf": "^3.0.2",
-    "typescript": "4.0.2"
+    "ts-jest": "^26.4.4",
+    "typescript": "4.0.2",
+    "jest": "^26.6.3",
+    "fs-extra": "^9.0.1"
   }
 }

@@ -1,112 +1,167 @@
-const axios = require('axios').default;
-import { writeFileSync } from 'fs';
+import { AxiosStatic } from 'axios';
 import * as cookie from 'cookie';
 
-const date = new Date();
-const startDate = date.toISOString();
-
-let generatedHar = {
+interface HarFile {
   log: {
-    version: '1.2',
+    version: string,
     creator: {
-      name: 'axios-tracker',
-      version: '1.0.0'
+      name: string,
+      version: string
     },
     pages: [],
-    entries: []
+    entries: NewEntry[];
   }
 };
 
-let newEntry = {
+interface NewEntry {
   request: {},
   response: {},
-  startedDateTime: startDate,
-  time: -1,
+  startedDateTime: string,
+  time: number,
   cache: {},
   timings: {
-    blocked: -1,
-    dns: -1,
-    ssl: -1,
-    connect: -1,
-    send: 10,
-    wait: 10,
-    receive: 10,
-    _blocked_queueing: -1
+    blocked: number,
+    dns: number,
+    ssl: number,
+    connect: number,
+    send: number,
+    wait: number,
+    receive: number,
+    _blocked_queueing: number
   }
 };
 
-async function axiosTracker(call) {
-  axios.interceptors.request.use(
-    async config => {
-      config.validateStatus = function () {
-        return true;
-      };
-      config.headers['request-startTime'] = process.hrtime();
-      const fullCookie = JSON.stringify(config.headers['Cookie']);
-      const version = config.httpVersion === undefined ? 'HTTP/1.1' : 'HTTP/' + config.httpVersion;
+export class AxiosHarTracker {
 
-      newEntry.request = {
-        method: config.method,
-        url: config.url,
-        httpVersion: version,
-        cookies: getCookies(fullCookie),
-        headers: [],
-        queryString: getParams(config.params),
-        headersSize: -1,
-        bodySize: -1
-      };
-      return config;
-    },
-    error => {
-      return Promise.reject(error);
-    }
-  );
+  private axios: AxiosStatic;
+  private generatedHar: HarFile;
+  private newEntry: NewEntry;
 
-  axios.interceptors.response.use(
-    async resp => {
-      if (resp) {
-        newEntry.response = {
-          status: resp.status,
-          statusText: resp.statusText,
-          headers: getHeaders(resp.headers),
-          startedDateTime: new Date(resp.headers.date),
-          time: resp.headers['request-duration'] = Math.round(
-            process.hrtime(resp.headers['request-startTime'])[0] * 1000 +
-              process.hrtime(resp.headers['request-startTime'])[1] / 1000000
-          ),
-          httpVersion: `HTTP/${resp.request.res.httpVersion}`,
-          cookies: getCookies(JSON.stringify(resp.config.headers['Cookie'])),
-          bodySize: JSON.stringify(resp.data).length,
-          redirectURL: '',
-          headersSize: -1,
-          content: {
-            size: JSON.stringify(resp.data).length,
-            mimeType: resp.headers['content-type'] ? resp.headers['content-type'] : 'text/plain',
-            text: JSON.stringify(resp.data)
-          },
-          cache: {},
-          timings: {
-            blocked: -1,
-            dns: -1,
-            ssl: -1,
-            connect: -1,
-            send: 10,
-            wait: 10,
-            receive: 10,
-            _blocked_queueing: -1
-          }
-        };
-        const enteriesContent = Object.assign({}, newEntry);
-        generatedHar.log.entries.push(enteriesContent);
-        return resp;
+  constructor(axiosModule: AxiosStatic) {
+    this.axios = axiosModule;
+    this.generatedHar = {
+      log: {
+        version: '1.2',
+        creator: {
+          name: 'axios-har-tracker',
+          version: '0.1.0'
+        },
+        pages: [],
+        entries: []
       }
-    },
-    error => {
-      return Promise.reject(error);
-    }
-  );
+    };
 
-  function transformObjectToArray(obj) {
+    this.axios.interceptors.request.use(
+      async config => {
+        this.newEntry = this.generateNewEntry();
+        this.newEntry.request = this.returnRequestObject(config);
+        return config;
+      },
+      async error => {
+        if (error.request) {
+          this.newEntry.request = this.returnRequestObject(error.request);
+          this.generatedHar.log.entries.push(this.newEntry);
+        }
+        return Promise.reject(error);
+      }
+    );
+
+    this.axios.interceptors.response.use(
+      async resp => {
+        this.pushNewEntryResponse(resp);
+        return resp;
+      },
+      async error => {
+        if (error.response) {
+          this.pushNewEntryResponse(error.response);
+        } else if (error.isAxiosError) {
+          this.pushNewEntryResponse(error);
+        }
+        return Promise.reject(error);
+      }
+    );
+  }
+
+  private returnRequestObject(config) {
+    const requestObject = {
+      method: config.method,
+      url: config.url,
+      httpVersion: 'HTTP/1.1',
+      cookies: this.getCookies(JSON.stringify(config.headers['Cookie'])),
+      headers: this.getHeaders(config.headers['common']),
+      queryString: this.getParams(config.params),
+      headersSize: -1,
+      bodySize: -1
+    };
+    return requestObject;
+  }
+
+  private returnResponseObject(response) {
+    const responseObject = {
+      status: response.status ? response.status : '',
+      statusText: response.statusText ? response.statusText : '',
+      headers: response.headers ? this.getHeaders(response.headers) : [],
+      startedDateTime: new Date().toISOString(),
+      time: response.headers ? response.headers['request-duration'] = Math.round(
+        process.hrtime(response.headers['request-startTime'])[0] * 1000 +
+        process.hrtime(response.headers['request-startTime'])[1] / 1000000
+      ) : 0,
+      httpVersion: 'HTTP/1.1',
+      cookies: response.config.headers['Cookie'] ? this.getCookies(JSON.stringify(response.config.headers['Cookie'])) : [],
+      bodySize: response.data ? JSON.stringify(response.data).length : 0,
+      redirectURL: '',
+      headersSize: -1,
+      content: {
+        size: response.data ? JSON.stringify(response.data).length : 0,
+        mimeType: response.headers ? response.headers['content-type'] : 'text/html',
+        text: response.data ? JSON.stringify(response.data) : ''
+      },
+      cache: {},
+      timings: {
+        blocked: -1,
+        dns: -1,
+        ssl: -1,
+        connect: -1,
+        send: 10,
+        wait: 10,
+        receive: 10,
+        _blocked_queueing: -1
+      }
+    }
+    return responseObject;
+  }
+
+  private pushNewEntryResponse(response) {
+    this.newEntry.response = this.returnResponseObject(response);
+    this.generatedHar.log.entries.push(this.newEntry);
+  }
+
+  private generateNewEntry() {
+    const newEntry: NewEntry = {
+      request: {},
+      response: {},
+      startedDateTime: new Date().toISOString(),
+      time: -1,
+      cache: {},
+      timings: {
+        blocked: -1,
+        dns: -1,
+        ssl: -1,
+        connect: -1,
+        send: 10,
+        wait: 10,
+        receive: 10,
+        _blocked_queueing: -1
+      }
+    };
+    return newEntry;
+  }
+
+  public getGeneratedHar() {
+    return this.generatedHar;
+  }
+
+  private transformObjectToArray(obj) {
     const results = Object.keys(obj).map(key => {
       return {
         name: key,
@@ -116,31 +171,16 @@ async function axiosTracker(call) {
     return obj ? results : [];
   }
 
-  function getCookies(fullCookie: string) {
-    if (fullCookie) {
-      const parsedCookie = cookie.parse(fullCookie);
-      return transformObjectToArray(parsedCookie);
-    } else return [];
+  private getCookies(fullCookie: string) {
+    return fullCookie ? this.transformObjectToArray(cookie.parse(fullCookie)) : [];
   }
 
-  function getParams(params) {
-    if (params !== undefined) {
-      return transformObjectToArray(params);
-    } else return [];
+  private getParams(params) {
+    return params ? this.transformObjectToArray(params) : [];
   }
 
-  function getHeaders(headersObject) {
-    if (headersObject !== undefined) {
-      return transformObjectToArray(headersObject);
-    } else return [];
+  private getHeaders(headersObject) {
+    return headersObject ? this.transformObjectToArray(headersObject) : [];
   }
 
-  const response = await axios(call);
-  return response;
 }
-
-function saveFile(filePath: string) {
-  writeFileSync(filePath, JSON.stringify(generatedHar), 'utf-8');
-}
-
-export {saveFile, axiosTracker}
