@@ -34,7 +34,7 @@ or with catching an error
 try {
     await axios.get('http://httpstat.us/404');
 } catch (error) {
-    console.log("An error appears after call to https:\\httpstat.us/404:", error);
+    console.log("An error appears after call to https://httpstat.us/404:", error);
 }
 ```
 
