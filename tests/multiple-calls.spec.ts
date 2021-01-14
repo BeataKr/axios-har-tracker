@@ -142,6 +142,4 @@ describe('axios-har-tracker e2e tests', () => {
     fse.outputFile('./harfiles/example-multi.har');
   });
 
-  
-
 });

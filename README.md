@@ -29,7 +29,7 @@ In order to perform an actual request use the axios.get/post/delete... call, exa
 ```
 await axios.get('http://httpstat.us/200');
 ```
-or to catch error
+or with catching an error
 ```
 try {
     await axios.get('http://httpstat.us/404');

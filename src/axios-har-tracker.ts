@@ -52,7 +52,6 @@ export class AxiosHarTracker {
     };
 
     this.axios.interceptors.request.use(
-
       async config => {
         this.newEntry = this.generateNewEntry();
         this.newEntry.request = this.returnRequestObject(config);
