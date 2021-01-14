@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { AxiosHarTracker } from '../src/axios-har-tracker'
+import { AxiosHarTracker } from '../axios-har-tracker'
 import * as fse from 'fs-extra';
 
 describe('axios-har-tracker e2e tests', () => {
