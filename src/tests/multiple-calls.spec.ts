@@ -35,7 +35,7 @@ describe('axios-har-tracker e2e tests', () => {
     try {
       await axios.get('http://httpstat.us/302');
     } catch (error) {
-      console.log("An error appears after call to https:\/\/httpstat.us\/302:", error);
+      console.log("An error appears after call to https:\/\/httpstat.us\/302");
     }
     const generatedHar = axiosTracker.getGeneratedHar();
     const array = generatedHar.log.entries;
@@ -52,7 +52,7 @@ describe('axios-har-tracker e2e tests', () => {
     try {
       await axios.get('http://httpstat.us/404');
     } catch (error) {
-      console.log("An error appears after call to https:\/\/httpstat.us\/404:", error);
+      console.log("An expected error appears after call to https:\/\/httpstat.us\/404:");
     }
     const generatedHar = axiosTracker.getGeneratedHar();
     const array = generatedHar.log.entries;
@@ -73,7 +73,7 @@ describe('axios-har-tracker e2e tests', () => {
     try {
       await axios.get('http://httpstat.us/500');
     } catch (error) {
-      console.log("An error appears after call to https:\/\/httpstat.us\/500:", error);
+      console.log("An expected error appears after call to https:\/\/httpstat.us\/500");
     }
     const generatedHar = axiosTracker.getGeneratedHar();
     const array = generatedHar.log.entries;
@@ -95,17 +95,17 @@ describe('axios-har-tracker e2e tests', () => {
     try {
       await axios.get('http://httpstat.us/302');
     } catch (error) {
-      console.log("An error appears after call to https:\/\/httpstat.us\/302:", error);
+      console.log("An expected error appears after call to https:\/\/httpstat.us\/302");
     }
     try {
       await axios.get('http://httpstat.us/404');
     } catch (error) {
-      console.log("An error appears after call to http:\/\/httpstat.us\/404:", error);
+      console.log("An expected error appears after call to http:\/\/httpstat.us\/404");
     }
     try {
       await axios.get('http://httpstat.us/500');
     } catch (error) {
-      console.log("An error appears after call to http:\/\/httpstat.us\/500:", error);
+      console.log("An expected error appears after call to http:\/\/httpstat.us\/500");
     }
     const generatedHar = axiosTracker.getGeneratedHar();
     const array = generatedHar.log.entries;
