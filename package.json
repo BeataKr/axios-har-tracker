@@ -12,6 +12,11 @@
     "prepublish": "npm run build"
   },
   "author": "Beata Kruzycka <beata.kruzycka@finastra.com>",
+  "keywords": [
+    "axios",
+    "HTTP Archive format",
+    "archive file"
+  ],
   "repository": {
     "type": "git",
     "url": ""
