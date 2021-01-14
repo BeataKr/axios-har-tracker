@@ -1,13 +1,13 @@
 {
   "name": "axios-har-tracker",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "",
   "main": "dist/axios-har-tracker.js",
   "scripts": {
     "prebuild": "rimraf ./dist ./coverage ./testresults ./harfiles",
     "build": "tsc",
     "test": "jest",
-    "pretest":  "rimraf ./harfiles",
+    "pretest": "rimraf ./harfiles",
     "posttest": "node ./scripts/jest-join-coverage.js",
     "prepublish": "npm run build"
   },
