@@ -59,7 +59,7 @@ export class AxiosHarTracker {
         return config;
       },
       async error => {
-        if (error.request || this.isNetworkError(error)) {
+        if (error.request) {
           this.newEntry.request = this.returnRequestObject(error.request);
           this.generatedHar.log.entries.push(this.newEntry);
         }
@@ -75,17 +75,12 @@ export class AxiosHarTracker {
       async error => {
         if (error.response) {
           this.pushNewEntryResponse(error.response);
-        }
-        if (this.isNetworkError(error)) {
+        } else if (error.isAxiosError) {
           this.pushNewEntryResponse(error);
         }
         return Promise.reject(error);
       }
     );
-  }
-
-  private isNetworkError(err) {
-    return err.isAxiosError && !err.response;
   }
 
   private returnRequestObject(config) {
@@ -119,7 +114,7 @@ export class AxiosHarTracker {
       headersSize: -1,
       content: {
         size: response.data ? JSON.stringify(response.data).length : 0,
-        mimeType: response.headers['content-type'] ? response.headers['content-type'] : 'text/html',
+        mimeType: response.headers ? response.headers['content-type'] : 'text/html',
         text: response.data ? JSON.stringify(response.data) : ''
       },
       cache: {},
@@ -143,7 +138,7 @@ export class AxiosHarTracker {
   }
 
   private generateNewEntry() {
-    const newEntry = {
+    const newEntry: NewEntry = {
       request: {},
       response: {},
       startedDateTime: new Date().toISOString(),
