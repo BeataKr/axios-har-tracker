@@ -14,7 +14,7 @@ describe('axios-har-tracker e2e tests', () => {
     try {
       await axios.get('http://httpstat.us/200');
     } catch (error) {
-      console.log("An error appears after call to https:\/\/httpstat.us\/200:", error);
+      console.log("An expected error appears after call to https:\/\/httpstat.us\/200");
     }
     const generatedHar = axiosTracker.getGeneratedHar();
     const array = generatedHar.log.entries;
@@ -32,10 +32,10 @@ describe('axios-har-tracker e2e tests', () => {
   });
 
   it('Should collect call to 302 - reject unauthorized', async () => {
-    try {
+    try{
       await axios.get('http://httpstat.us/302');
-    } catch (error) {
-      console.log("An error appears after call to https:\/\/httpstat.us\/302");
+    } catch (error){
+      console.log("An expected error appears after call to https:\/\/httpstat.us\/302");
     }
     const generatedHar = axiosTracker.getGeneratedHar();
     const array = generatedHar.log.entries;
@@ -52,7 +52,7 @@ describe('axios-har-tracker e2e tests', () => {
     try {
       await axios.get('http://httpstat.us/404');
     } catch (error) {
-      console.log("An expected error appears after call to https:\/\/httpstat.us\/404:");
+      console.log("An expected error appears after call to https:\/\/httpstat.us\/404");
     }
     const generatedHar = axiosTracker.getGeneratedHar();
     const array = generatedHar.log.entries;
