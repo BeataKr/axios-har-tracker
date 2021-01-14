@@ -10,6 +10,10 @@ describe('axios-har-tracker e2e tests', () => {
     axiosTracker = new AxiosHarTracker(axios);
   });
 
+  beforeAll(async () => {
+    fse.ensureDir('./harfiles');
+  });
+
   it('Should collect call with status 200', async () => {
     try {
       await axios.get('http://httpstat.us/200');
@@ -28,7 +32,7 @@ describe('axios-har-tracker e2e tests', () => {
     });
     expect(array.length).toBe(1);
 
-    fse.outputFile('./harfiles/example-200.har');
+    await fse.writeJson('./harfiles/example-200.har', generatedHar);
   });
 
   it('Should collect call to 302 - reject unauthorized', async () => {
@@ -45,7 +49,7 @@ describe('axios-har-tracker e2e tests', () => {
     });
     expect(array.length).toBe(1);
 
-    fse.outputFile('./harfiles/example-302.har');
+    await fse.writeJson('./harfiles/example-302.har', generatedHar);
   });
 
   it('Should collect call with status 404', async () => {
@@ -66,7 +70,7 @@ describe('axios-har-tracker e2e tests', () => {
     });
     expect(array.length).toBe(1);
 
-    fse.outputFile('./harfiles/example-404.har');
+    await fse.writeJson('./harfiles/example-404.har', generatedHar);
   });
 
   it('Should collect call with status 500', async () => {
@@ -87,7 +91,7 @@ describe('axios-har-tracker e2e tests', () => {
     });
     expect(array.length).toBe(1);
 
-    fse.outputFile('./harfiles/example-500.har');
+    await fse.writeJson('./harfiles/example-500.har', generatedHar);
   });
 
   it('Should collect multiple calls', async () => {
@@ -139,7 +143,7 @@ describe('axios-har-tracker e2e tests', () => {
     });
     expect(array.length).toBe(4);
 
-    fse.outputFile('./harfiles/example-multi.har');
+    await fse.writeJson('./harfiles/example-multi.har', generatedHar);
   });
 
 });
