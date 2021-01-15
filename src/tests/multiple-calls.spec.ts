@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { AxiosHarTracker } from '../axios-har-tracker'
+import { AxiosHarTracker } from '../axios-har-tracker';
 import * as fse from 'fs-extra';
 
 describe('axios-har-tracker e2e tests', () => {
@@ -37,7 +37,8 @@ describe('axios-har-tracker e2e tests', () => {
 
   it('Should collect call to 302 - reject unauthorized', async () => {
     try{
-      await axios.get('http://httpstat.us/302');
+      const response302 = await axios.get('http://httpstat.us/302');
+      console.log("DEBUG response302",response302)
     } catch (error){
       console.log("An expected error appears after call to https:\/\/httpstat.us\/302");
     }
