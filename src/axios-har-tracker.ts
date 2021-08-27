@@ -87,11 +87,16 @@ export class AxiosHarTracker {
       method: config.method,
       url: config.url,
       httpVersion: 'HTTP/1.1',
-      cookies: this.getCookies(JSON.stringify(config.headers['Cookie'])),
-      headers: this.getHeaders(config.headers['common']),
+      cookies: config.headers['Cookie'] ? this.getCookies(JSON.stringify(config.headers['Cookie'])) : [],
+      headers: config.headers ? this.getRequestHeaders(config.headers, config.method) : [],
       queryString: this.getParams(config.params),
       headersSize: -1,
-      bodySize: -1
+      bodySize: config.data ? JSON.stringify(config.data).length : 0,
+      content: {
+        size: config.data ? JSON.stringify(config.data).length : 0,
+        mimeType: this.getMimeType(config),
+        text: config.data ? JSON.stringify(config.data) : ''
+      }
     };
     return requestObject;
   }
@@ -189,6 +194,13 @@ export class AxiosHarTracker {
 
   private getHeaders(headersObject) {
     return headersObject ? this.transformObjectToArray(headersObject) : [];
+  }
+
+  private getRequestHeaders(headersObject, method) {
+    return headersObject ? 
+    [ ...this.getHeaders(headersObject['common']), 
+      ...this.getHeaders(headersObject[method])
+    ] : []
   }
 
 }
