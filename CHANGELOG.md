@@ -1,3 +1,7 @@
+## 0.2.0
+
+- use *axios* v0.23.0
+
 ## 0.1.2
 
 - Handle mimeType for authorized response from call with status 302
