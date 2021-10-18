@@ -1,3 +1,7 @@
+## 0.2.1
+
+- lockfileVersion 1
+
 ## 0.2.0
 
 - use *axios* v0.23.0
