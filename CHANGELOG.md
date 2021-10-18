@@ -1,3 +1,7 @@
+## 0.2.2
+
+- lockfileVersion 2 (npm 7)
+
 ## 0.2.1
 
 - lockfileVersion 1

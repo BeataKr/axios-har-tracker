@@ -1,6 +1,6 @@
 {
   "name": "axios-har-tracker",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "",
   "main": "dist/axios-har-tracker.js",
   "scripts": {
@@ -27,7 +27,7 @@
   "homepage": "https://github.com/BeataKr/axios-har-tracker",
   "license": "MIT",
   "dependencies": {
-    "axios": "0.23.0",
+    "axios": "^0.23.0",
     "cookie": "^0.4.1"
   },
   "devDependencies": {
