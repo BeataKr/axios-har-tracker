@@ -1,5 +1,6 @@
 import { AxiosStatic } from 'axios';
 import * as cookie from 'cookie';
+import * as flatted from 'flatted';
 
 interface HarFile {
   log: {
@@ -87,7 +88,7 @@ export class AxiosHarTracker {
       method: config.method,
       url: config.url,
       httpVersion: 'HTTP/1.1',
-      cookies: this.getCookies(JSON.stringify(config.headers['Cookie'])),
+      cookies: this.getCookies(flatted.stringify(config.headers['Cookie'])),
       headers: this.getHeaders(config.headers['common']),
       queryString: this.getParams(config.params),
       headersSize: -1,
@@ -107,14 +108,14 @@ export class AxiosHarTracker {
         process.hrtime(response.headers['request-startTime'])[1] / 1000000
       ) : 0,
       httpVersion: 'HTTP/1.1',
-      cookies: response.config.headers['Cookie'] ? this.getCookies(JSON.stringify(response.config.headers['Cookie'])) : [],
-      bodySize: response.data ? JSON.stringify(response.data).length : 0,
+      cookies: response.config.headers['Cookie'] ? this.getCookies(flatted.stringify(response.config.headers['Cookie'])) : [],
+      bodySize: response.data ? flatted.stringify(response.data).length : 0,
       redirectURL: '',
       headersSize: -1,
       content: {
-        size: response.data ? JSON.stringify(response.data).length : 0,
+        size: response.data ? flatted.stringify(response.data).length : 0,
         mimeType: this.getMimeType(response),
-        text: response.data ? JSON.stringify(response.data) : ''
+        text: response.data ? flatted.stringify(response.data) : ''
       },
       cache: {},
       timings: {
