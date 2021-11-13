@@ -1,3 +1,8 @@
+
+## 0.3.0
+
+- use *axios* v0.24.0
+
 ## 0.2.2
 
 - lockfileVersion 2 (npm 7)
