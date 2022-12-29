@@ -1,41 +1,80 @@
 import { AxiosStatic } from 'axios';
 import * as cookie from 'cookie';
 
-interface HarFile {
-  log: {
-    version: string,
-    creator: {
-      name: string,
-      version: string
-    },
-    pages: [],
-    entries: NewEntry[];
-  }
+export interface HarFile {
+  log: Log;
 };
 
-interface NewEntry {
-  request: {},
-  response: {},
-  startedDateTime: string,
-  time: number,
-  cache: {},
-  timings: {
-    blocked: number,
-    dns: number,
-    ssl: number,
-    connect: number,
-    send: number,
-    wait: number,
-    receive: number,
-    _blocked_queueing: number
-  }
-};
+export interface Log {
+  version: string;
+  creator: Creator;
+  pages?: null[] | null;
+  entries?: Entry[] | null;
+  comment: string;
+}
+export interface Creator {
+  name: string;
+  version: string;
+}
+export interface Entry {
+  request: Request;
+  response: Response | null;
+  startedDateTime: string;
+  time: number;
+  cache: Cache;
+  timings: Timings;
+}
+export interface Request {
+  method: string;
+  url: string;
+  httpVersion: string;
+  cookies?: KeyValue[] | null;
+  headers?: KeyValue[] | null;
+  queryString?: KeyValue[] | null;
+  headersSize: number;
+  bodySize: number;
+}
+export interface KeyValue {
+  name: string;
+  value: string;
+}
+export interface Response {
+  status: number;
+  statusText: string;
+  headers?: KeyValue[] | null;
+  startedDateTime: string;
+  time: number;
+  httpVersion: string;
+  cookies?: KeyValue[] | null;
+  bodySize: number;
+  redirectURL: string;
+  headersSize: number;
+  content: Content;
+  cache: Cache;
+  timings: Timings;
+}
+export interface Content {
+  size: number;
+  mimeType: string;
+  text: string;
+}
+export type Cache = Record<string, unknown>;
+export interface Timings {
+  blocked: number;
+  dns: number;
+  ssl: number;
+  connect: number;
+  send: number;
+  wait: number;
+  receive: number;
+  _blocked_queueing: number;
+}
 
 export class AxiosHarTracker {
 
   private axios: AxiosStatic;
-  private generatedHar: HarFile;
-  private newEntry: NewEntry;
+  private readonly generatedHar: HarFile;
+  private newEntry: Entry;
   private requestInterceptor: number;
   private responseInterceptor: number;
 
@@ -49,14 +88,14 @@ export class AxiosHarTracker {
           version: '0.1.0'
         },
         pages: [],
-        entries: []
+        entries: [],
+        comment: ""
       }
     };
 
     this.requestInterceptor = this.axios.interceptors.request.use(
       async config => {
-        this.newEntry = this.generateNewEntry();
-        this.newEntry.request = this.returnRequestObject(config);
+        this.newEntry = this.generateNewEntry(this.returnRequestObject(config));
         return config;
       },
       async error => {
@@ -95,7 +134,7 @@ export class AxiosHarTracker {
     }
   }
 
-  private returnRequestObject(config) {
+  private returnRequestObject(config): Request {
     const requestObject = {
       method: config.method,
       url: config.url,
@@ -109,7 +148,7 @@ export class AxiosHarTracker {
     return requestObject;
   }
 
-  private returnResponseObject(response) {
+  private returnResponseObject(response): Response {
     const responseObject = {
       status: response.status ? response.status : '',
       statusText: response.statusText ? response.statusText : '',
@@ -157,10 +196,10 @@ export class AxiosHarTracker {
     this.generatedHar.log.entries.push(this.newEntry);
   }
 
-  private generateNewEntry() {
-    const newEntry: NewEntry = {
-      request: {},
-      response: {},
+  private generateNewEntry(request: Request) {
+    const newEntry: Entry = {
+      request,
+      response: null,
       startedDateTime: new Date().toISOString(),
       time: -1,
       cache: {},
@@ -182,7 +221,7 @@ export class AxiosHarTracker {
     return this.generatedHar;
   }
 
-  private transformObjectToArray(obj) {
+  private transformObjectToArray(obj): KeyValue[] {
     const results = Object.keys(obj).map(key => {
       return {
         name: key,
