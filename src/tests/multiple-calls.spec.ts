@@ -37,8 +37,7 @@ describe('axios-har-tracker e2e tests', () => {
 
   it('Should collect call to 302 - reject unauthorized', async () => {
     try{
-      const response302 = await axios.get('http://httpstat.us/302');
-      console.log("DEBUG response302",response302)
+      await axios.get('http://httpstat.us/302');
     } catch (error){
       console.log("An expected error appears after call to https:\/\/httpstat.us\/302");
     }
@@ -145,6 +144,26 @@ describe('axios-har-tracker e2e tests', () => {
     expect(array.length).toBe(4);
 
     await fse.writeJson('./harfiles/example-multi.har', generatedHar);
+  });
+
+  it('Should collect multiple concurrent calls', async () => {
+    await Promise.all([
+      axios.get('http://httpstat.us/200'),
+      axios.get('http://httpstat.us/200'),
+      axios.get('http://httpstat.us/200'),
+      axios.get('http://httpstat.us/200'),
+      axios.get('http://httpstat.us/200'),
+    ]);
+    const generatedHar = axiosTracker.getGeneratedHar();
+    const entries = generatedHar.log.entries;
+    expect(entries).toHaveLength(5);
+    for(let entry of entries){
+      expect(entry.request).toMatchObject({
+        "method": "get",
+        "url": "http://httpstat.us/200"
+      });
+    }
+    await fse.writeJson('./harfiles/example-multi-concurrent.har', generatedHar, {spaces: 2});
   });
 
 });

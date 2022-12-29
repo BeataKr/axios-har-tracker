@@ -36,6 +36,8 @@ export class AxiosHarTracker {
   private axios: AxiosStatic;
   private generatedHar: HarFile;
   private newEntry: NewEntry;
+  private requestInterceptor: number;
+  private responseInterceptor: number;
 
   constructor(axiosModule: AxiosStatic) {
     this.axios = axiosModule;
@@ -51,7 +53,7 @@ export class AxiosHarTracker {
       }
     };
 
-    this.axios.interceptors.request.use(
+    this.requestInterceptor = this.axios.interceptors.request.use(
       async config => {
         this.newEntry = this.generateNewEntry();
         this.newEntry.request = this.returnRequestObject(config);
@@ -66,7 +68,7 @@ export class AxiosHarTracker {
       }
     );
 
-    this.axios.interceptors.response.use(
+    this.responseInterceptor = this.axios.interceptors.response.use(
       async resp => {
         this.pushNewEntryResponse(resp);
         return resp;
@@ -80,6 +82,17 @@ export class AxiosHarTracker {
         return Promise.reject(error);
       }
     );
+  }
+
+  public stopTracking() {
+    if(this.requestInterceptor) {
+      this.axios.interceptors.request.eject(this.requestInterceptor);
+      this.requestInterceptor = null;
+    }
+    if(this.responseInterceptor){
+      this.axios.interceptors.response.eject(this.responseInterceptor);
+      this.responseInterceptor = null;
+    }
   }
 
   private returnRequestObject(config) {
