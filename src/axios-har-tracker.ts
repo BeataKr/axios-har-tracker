@@ -84,7 +84,7 @@ export class AxiosHarTracker {
   }
 
   private returnRequestObject(config) {
-    const requestObject = {
+    const requestObject: any = {
       method: config.method,
       url: config.url,
       httpVersion: 'HTTP/1.1',
@@ -94,6 +94,9 @@ export class AxiosHarTracker {
       headersSize: -1,
       bodySize: -1
     };
+    if (config.data) {
+      requestObject.postData = config.data;
+    }
     return requestObject;
   }
 
@@ -172,9 +175,10 @@ export class AxiosHarTracker {
 
   private transformObjectToArray(obj, encode: boolean) {
     const results = Object.keys(obj).map(key => {
+      var value = obj[key];
       return {
         name: key,
-        value: encode ? qs.stringify(obj[key]) : obj[key]
+        value: encode ? (qs.stringify(value) || value) : value
       };
     });
     return obj ? results : [];
