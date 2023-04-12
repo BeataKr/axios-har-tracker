@@ -95,7 +95,10 @@ export class AxiosHarTracker {
       bodySize: -1
     };
     if (config.data) {
-      requestObject.postData = config.data;
+      requestObject.postData = {
+        mimeType: config.headers['Content-Type'],
+        text: JSON.stringify(config.data)
+      };
     }
     return requestObject;
   }
