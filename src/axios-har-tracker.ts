@@ -1,5 +1,6 @@
 import { AxiosStatic } from 'axios';
 import * as cookie from 'cookie';
+import * as qs from 'qs';
 
 interface HarFile {
   log: {
@@ -83,16 +84,27 @@ export class AxiosHarTracker {
   }
 
   private returnRequestObject(config) {
-    const requestObject = {
+    const requestObject: any = {
       method: config.method,
       url: config.url,
       httpVersion: 'HTTP/1.1',
-      cookies: this.getCookies(JSON.stringify(config.headers['Cookie'])),
-      headers: this.getHeaders(config.headers['common']),
+      cookies: config.headers['Cookie'] ? this.getCookies(JSON.stringify(config.headers['Cookie'])) : [],
+      headers: config.headers ? this.getRequestHeaders(config.headers, config.method) : [],
       queryString: this.getParams(config.params),
       headersSize: -1,
-      bodySize: -1
+      bodySize: config.data ? JSON.stringify(config.data).length : 0,
+      content: {
+        size: config.data ? JSON.stringify(config.data).length : 0,
+        mimeType: this.getMimeType(config),
+        text: config.data ? JSON.stringify(config.data) : ''
+      }
     };
+    if (config.data) {
+      requestObject.postData = {
+        mimeType: config.headers['Content-Type'],
+        text: JSON.stringify(config.data)
+      };
+    }
     return requestObject;
   }
 
@@ -169,26 +181,33 @@ export class AxiosHarTracker {
     return this.generatedHar;
   }
 
-  private transformObjectToArray(obj) {
+  private transformObjectToArray(obj, encode: boolean) {
     const results = Object.keys(obj).map(key => {
+      var value = obj[key];
       return {
         name: key,
-        value: obj[key].toString()
+        value: encode ? (qs.stringify(value) || value) : value
       };
     });
     return obj ? results : [];
   }
 
   private getCookies(fullCookie: string) {
-    return fullCookie ? this.transformObjectToArray(cookie.parse(fullCookie)) : [];
+    return fullCookie ? this.transformObjectToArray(cookie.parse(fullCookie), false) : [];
   }
 
   private getParams(params) {
-    return params ? this.transformObjectToArray(params) : [];
+    return params ? this.transformObjectToArray(params, true) : [];
   }
 
   private getHeaders(headersObject) {
-    return headersObject ? this.transformObjectToArray(headersObject) : [];
+    return headersObject ? this.transformObjectToArray(headersObject, false) : [];
+  }
+
+  private getRequestHeaders(headersObject, method) {
+    return headersObject ? [ ...this.getHeaders(headersObject['common']), 
+      ...this.getHeaders(headersObject[method])
+    ] : []
   }
 
 }
