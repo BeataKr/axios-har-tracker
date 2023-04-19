@@ -84,12 +84,13 @@ export class AxiosHarTracker {
   }
 
   private returnRequestObject(config) {
+    let tmp: [];
     const requestObject: any = {
       method: config.method,
       url: config.url,
       httpVersion: 'HTTP/1.1',
       cookies: config.headers['Cookie'] ? this.getCookies(JSON.stringify(config.headers['Cookie'])) : [],
-      headers: config.headers ? this.getRequestHeaders(config.headers, config.method) : [],
+      headers: config.headers ? this.getHeaders(config.headers): [],
       queryString: this.getParams(config.params),
       headersSize: -1,
       bodySize: config.data ? JSON.stringify(config.data).length : 0,
@@ -181,12 +182,20 @@ export class AxiosHarTracker {
     return this.generatedHar;
   }
 
+  private checkObj(value: any){
+    let results
+    if(typeof value === 'object' && value !== null){
+      results = JSON.stringify(value);
+    } else results = value;
+    return results;
+  }
+
   private transformObjectToArray(obj, encode: boolean) {
     const results = Object.keys(obj).map(key => {
-      var value = obj[key];
+      let value = obj[key];
       return {
         name: key,
-        value: encode ? (qs.stringify(value) || value) : value
+        value: encode ? (qs.stringify(value) || value) : this.checkObj(value)
       };
     });
     return obj ? results : [];
@@ -202,12 +211,6 @@ export class AxiosHarTracker {
 
   private getHeaders(headersObject) {
     return headersObject ? this.transformObjectToArray(headersObject, false) : [];
-  }
-
-  private getRequestHeaders(headersObject, method) {
-    return headersObject ? [ ...this.getHeaders(headersObject['common']), 
-      ...this.getHeaders(headersObject[method])
-    ] : []
   }
 
 }
