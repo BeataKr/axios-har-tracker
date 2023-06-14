@@ -95,6 +95,34 @@ describe('axios-har-tracker e2e tests', () => {
     await fse.writeJson('./harfiles/example-500.har', generatedHar);
   });
 
+  it('Should collect concurrent calls', async () => {
+    function fetch (url) {
+      function wrap (resolve, reject) {
+        axios.get(url)
+          .then(resolve)
+          .catch((error) => {
+            console.log('error while fetching', url, error);
+            resolve();
+          });
+      }
+      return new Promise(wrap);
+    }
+
+    return Promise.all([
+      fetch('http://httpstat.us/200?msg=A'),
+      fetch('http://httpstat.us/200?msg=hello'),
+      fetch('http://httpstat.us/200?msg=C'),
+      fetch('http://httpstat.us/200?msg=D')
+    ]).then(async (results) => {
+      console.log("OUT RESULTS", results);
+      const generatedHar = axiosTracker.getGeneratedHar();
+      const array = generatedHar.log.entries;
+      console.log("OUT ENTRIES", array);
+      expect(array.length).toBe(4);
+      await fse.writeJson('./harfiles/example-multiple-concurrent-test.har', generatedHar);
+    });
+  });
+
   it('Should collect multiple calls', async () => {
     await axios.get('http://httpstat.us/200');
     try {
