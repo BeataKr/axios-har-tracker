@@ -84,7 +84,7 @@ export class AxiosHarTracker {
     let tmp: [];
     const requestObject: any = {
       method: config.method,
-      url: config.url,
+      url: this.getURL(config),
       httpVersion: 'HTTP/1.1',
       cookies: config.headers['Cookie'] ? this.getCookies(JSON.stringify(config.headers['Cookie'])) : [],
       headers: config.headers ? this.getHeaders(config.headers): [],
@@ -210,6 +210,30 @@ export class AxiosHarTracker {
     return headersObject ? this.transformObjectToArray(headersObject, false) : [];
   }
 
+  private getURL(config): string {
+    /**
+     * A regex to check if a URL is absolute:
+     * ^ - beginning of the string
+     * (?: - beginning of a non-captured group
+     *   [a-z+]+ - any character of 'a' to 'z' or "+" 1 or more times
+     *   : - string (colon character)
+     * )? - end of the non-captured group. Group appearing 0 or 1 times
+     * // - string (two forward slash characters)
+     * 'i' - non case-sensitive flag
+     */
+    const absoluteURLRegex = /^(?:[a-z+]+:)?\/\//i;
+
+    let url = config.url;
+
+    if (config.baseURL && !absoluteURLRegex.test(config.url)) {
+      url = config.baseURL + url;
+    }
+    if (config.params) {
+      url += '?' + qs.stringify(config.params);
+    }
+    return url;
+  }
+
   public resetHar() {
     this.generatedHar = {
       log: {
@@ -220,4 +244,5 @@ export class AxiosHarTracker {
       }
     };
   }
+
 }
