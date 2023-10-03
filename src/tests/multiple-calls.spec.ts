@@ -147,4 +147,104 @@ describe('axios-har-tracker e2e tests', () => {
     await fse.writeJson('./harfiles/example-multi.har', generatedHar);
   });
 
+  it('Should collect call with query parameters', async () => {
+    try {
+      await axios.get('http://httpstat.us/200', {
+        params: {
+          test: 1
+        }
+      });
+    } catch (error) {
+      console.log("An expected error appears after call to https:\/\/httpstat.us\/200");
+    }
+    const generatedHar = axiosTracker.getGeneratedHar();
+    console.log(JSON.stringify(generatedHar, null, 2))
+    const array = generatedHar.log.entries;
+    expect(array[0].request).toMatchObject({
+      "method": "get",
+      "url": "http://httpstat.us/200?test=1",
+      "queryString": [
+        {
+          "name": "test",
+          "value": 1,
+        }
+      ]
+    });
+    expect(array[0].response).toMatchObject({
+      "status": 200,
+      "statusText": "OK"
+    });
+    expect(array.length).toBe(1);
+
+    await fse.writeJson('./harfiles/example-200-withParams.har', generatedHar);
+  });
+
+  it('Should collect call with baseURL', async () => {
+    let axiosInstance = axios.create({
+      baseURL: 'http://httpstat.us'
+    })
+
+    axiosTracker = new AxiosHarTracker(axiosInstance);
+
+    try {
+      await axiosInstance.get('/200');
+    } catch (error) {
+      console.log("An expected error appears after call to https:\/\/httpstat.us\/200");
+    }
+    const generatedHar = axiosTracker.getGeneratedHar();
+    console.log(JSON.stringify(generatedHar, null, 2))
+    const array = generatedHar.log.entries;
+    expect(array[0].request).toMatchObject({
+      "method": "get",
+      "url": "http://httpstat.us/200",
+    });
+    expect(array[0].response).toMatchObject({
+      "status": 200,
+      "statusText": "OK"
+    });
+    expect(array.length).toBe(1);
+
+    await fse.writeJson('./harfiles/example-200-withBaseURL.har', generatedHar);
+
+  });
+
+  it('Should collect call with baseURL and parameters', async () => {
+    let axiosInstance = axios.create({
+      baseURL: 'http://httpstat.us'
+    })
+
+    axiosTracker = new AxiosHarTracker(axiosInstance);
+
+    try {
+      await axiosInstance.get('/200', {
+        params: {
+          test: 1
+        }
+      });
+    } catch (error) {
+      console.log("An expected error appears after call to https:\/\/httpstat.us\/200");
+    }
+    const generatedHar = axiosTracker.getGeneratedHar();
+    console.log(JSON.stringify(generatedHar, null, 2))
+    const array = generatedHar.log.entries;
+    expect(array[0].request).toMatchObject({
+      "method": "get",
+      "url": "http://httpstat.us/200?test=1",
+      "queryString": [
+        {
+          "name": "test",
+          "value": 1,
+        }
+      ]
+    });
+    expect(array[0].response).toMatchObject({
+      "status": 200,
+      "statusText": "OK"
+    });
+    expect(array.length).toBe(1);
+
+    await fse.writeJson('./harfiles/example-200-withParamsAndBaseURL.har', generatedHar);
+
+  });
+
 });
