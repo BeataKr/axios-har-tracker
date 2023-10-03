@@ -32,6 +32,11 @@ interface NewEntry {
   }
 };
 
+type AxiosHarTrackerCreatorConfig = {
+  name: string,
+  version: string
+};
+
 export class AxiosHarTracker {
 
   private axios: AxiosInstance;
@@ -41,17 +46,8 @@ export class AxiosHarTracker {
 
   constructor(axiosModule: AxiosInstance, creatorConfig: AxiosHarTrackerCreatorConfig = { name: 'axios-har-tracker', version: '0.1.0' }) {
     this.axios = axiosModule;
-    this.generatedHar = {
-      log: {
-        version: '1.2',
-        creator: {
-          name: 'axios-har-tracker',
-          version: '0.1.0'
-        },
-        pages: [],
-        entries: []
-      }
-    };
+    this.creatorConfig = creatorConfig;
+    this.resetHar();
 
     this.axios.interceptors.request.use(
       async config => {
@@ -214,4 +210,14 @@ export class AxiosHarTracker {
     return headersObject ? this.transformObjectToArray(headersObject, false) : [];
   }
 
+  public resetHar() {
+    this.generatedHar = {
+      log: {
+        version: '1.2',
+        creator: this.creatorConfig,
+        pages: [],
+        entries: []
+      }
+    };
+  }
 }
