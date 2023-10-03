@@ -1,4 +1,4 @@
-import { AxiosStatic } from 'axios';
+import { AxiosInstance} from 'axios';
 import * as cookie from 'cookie';
 import * as qs from 'qs';
 
@@ -34,11 +34,12 @@ interface NewEntry {
 
 export class AxiosHarTracker {
 
-  private axios: AxiosStatic;
+  private axios: AxiosInstance;
   private generatedHar: HarFile;
   private newEntry: NewEntry;
+  private creatorConfig: AxiosHarTrackerCreatorConfig;
 
-  constructor(axiosModule: AxiosStatic) {
+  constructor(axiosModule: AxiosInstance, creatorConfig: AxiosHarTrackerCreatorConfig = { name: 'axios-har-tracker', version: '0.1.0' }) {
     this.axios = axiosModule;
     this.generatedHar = {
       log: {
