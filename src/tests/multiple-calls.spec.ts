@@ -145,7 +145,7 @@ describe('axios-har-tracker e2e tests', () => {
     expect(array.length).toBe(4);
 
     await fse.writeJson('./harfiles/example-multi.har', generatedHar);
-  });
+  }, 20000);
 
   it('Should collect call with query parameters', async () => {
     try {
