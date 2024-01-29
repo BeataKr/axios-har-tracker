@@ -1,4 +1,4 @@
-![https://www.npmjs.com/package/axios-har-tracker](https://img.shields.io/npm/v/axios-har-tracker?color=9cf&style=plastic)
+<a href="https://www.npmjs.com/package/axios-har-tracker">![npm](https://img.shields.io/npm/v/axios-har-tracker?color=9cf&style=plastic)</a>
 
 This library was designed for gathering HAR files from requests sent using `axios`
 
