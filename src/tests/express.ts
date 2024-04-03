@@ -31,7 +31,7 @@ app.get("/302", (req, res) => {
   res.setHeader("location", "/200");
   return defaultMiddleware(res, 302);
 });
-app.get("/400", (req, res) => defaultMiddleware(res, 404));
+app.get("/404", (req, res) => defaultMiddleware(res, 404));
 app.get("/500", (req, res) => defaultMiddleware(res, 500));
 
 export async function startServer() {
