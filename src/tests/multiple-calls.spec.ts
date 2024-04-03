@@ -1,9 +1,20 @@
-import axios from "axios";
+import axios, {AxiosResponse} from "axios";
 import { AxiosHarTracker } from "../axios-har-tracker";
 import * as fse from "fs-extra";
+import {startServer, stopServer} from "./express";
 
 describe("axios-har-tracker e2e tests", () => {
-  let axiosTracker;
+  let axiosTracker: AxiosHarTracker;
+  let serverUrl: string;
+
+  beforeAll(async () => {
+    const port = await startServer();
+    serverUrl = `http://localhost:${port}`;
+  });
+
+  afterAll(async () => {
+    await stopServer();
+  });
 
   beforeEach(async () => {
     axiosTracker = new AxiosHarTracker(axios);
@@ -13,19 +24,40 @@ describe("axios-har-tracker e2e tests", () => {
     fse.ensureDir("./harfiles");
   });
 
+  function assembleTestHeaders(response: AxiosResponse) {
+    const headers = [];
+
+    Object.keys(response.headers).forEach((key) => {
+      if(Array.isArray(response.headers[key])) {
+        response.headers[key].forEach((headerValue: string) => headers.push({
+          name: key,
+          value: headerValue,
+        }));
+      } else {
+        headers.push({
+          name: key,
+          value: response.headers[key],
+        })
+      }
+    });
+
+    return headers;
+  }
+
   it("Should collect call with status 200", async () => {
-    await axios.get("http://httpstat.us/200", {
+    const response = await axios.get(`${serverUrl}/200`, {
       validateStatus: (status) => status === 200
     });
     const generatedHar = axiosTracker.getGeneratedHar();
     const array = generatedHar.log.entries;
     expect(array[0].request).toMatchObject({
       method: "get",
-      url: "http://httpstat.us/200",
+      url: `${serverUrl}/200`,
     });
     expect(array[0].response).toMatchObject({
       status: 200,
       statusText: "OK",
+      headers: assembleTestHeaders(response),
     });
     expect(array.length).toBe(1);
 
@@ -33,7 +65,7 @@ describe("axios-har-tracker e2e tests", () => {
   });
 
   it("Should collect call to 302 - reject unauthorized", async () => {
-    await axios.get("http://httpstat.us/302", {
+    const response = await axios.get(`${serverUrl}/302`, {
       maxRedirects: 0,
       validateStatus: (status) => status === 302
     });
@@ -41,7 +73,12 @@ describe("axios-har-tracker e2e tests", () => {
     const array = generatedHar.log.entries;
     expect(array[0].request).toMatchObject({
       method: "get",
-      url: "http://httpstat.us/302",
+      url: `${serverUrl}/302`,
+    });
+    expect(array[0].response).toMatchObject({
+      status: 302,
+      statusText: "Found",
+      headers: assembleTestHeaders(response),
     });
     expect(array.length).toBe(1);
 
@@ -49,18 +86,19 @@ describe("axios-har-tracker e2e tests", () => {
   });
 
   it("Should collect call with status 404", async () => {
-    await axios.get("http://httpstat.us/404", {
+    const response = await axios.get(`${serverUrl}/404`, {
       validateStatus: (status) => status === 404
     });
     const generatedHar = axiosTracker.getGeneratedHar();
     const array = generatedHar.log.entries;
     expect(array[0].request).toMatchObject({
       method: "get",
-      url: "http://httpstat.us/404",
+      url: `${serverUrl}/404`,
     });
     expect(array[0].response).toMatchObject({
       status: 404,
       statusText: "Not Found",
+      headers: assembleTestHeaders(response),
     });
     expect(array.length).toBe(1);
 
@@ -68,18 +106,19 @@ describe("axios-har-tracker e2e tests", () => {
   });
 
   it("Should collect call with status 500", async () => {
-    await axios.get("http://httpstat.us/500", {
+    const response = await axios.get(`${serverUrl}/500`, {
       validateStatus: (status) => status === 500
     });
     const generatedHar = axiosTracker.getGeneratedHar();
     const array = generatedHar.log.entries;
     expect(array[0].request).toMatchObject({
       method: "get",
-      url: "http://httpstat.us/500",
+      url: `${serverUrl}/500`,
     });
     expect(array[0].response).toMatchObject({
       status: 500,
       statusText: "Internal Server Error",
+      headers: assembleTestHeaders(response),
     });
     expect(array.length).toBe(1);
 
@@ -87,48 +126,59 @@ describe("axios-har-tracker e2e tests", () => {
   });
 
   it("Should collect multiple calls", async () => {
-    await axios.get("http://httpstat.us/200", {
+    const responses = [];
+    responses.push(await axios.get(`${serverUrl}/200`, {
       validateStatus: (status) => status === 200
-    });
-    await axios.get("http://httpstat.us/302", {
+    }));
+    responses.push(await axios.get(`${serverUrl}/302`, {
       maxRedirects: 0,
       validateStatus: (status) => status === 302
-    });
-    await axios.get("http://httpstat.us/404", {
+    }));
+    responses.push(await axios.get(`${serverUrl}/404`, {
       validateStatus: (status) => status === 404
-    });
-    await axios.get("http://httpstat.us/500", {
+    }));
+    responses.push(await axios.get(`${serverUrl}/500`, {
       validateStatus: (status) => status === 500
-    });
+    }));
+
     const generatedHar = axiosTracker.getGeneratedHar();
     const array = generatedHar.log.entries;
+
     expect(array[0].request).toMatchObject({
       method: "get",
-      url: "http://httpstat.us/200",
+      url: `${serverUrl}/200`,
     });
     expect(array[0].response).toMatchObject({
       status: 200,
       statusText: "OK",
+      headers: assembleTestHeaders(responses[0]),
     });
     expect(array[1].request).toMatchObject({
       method: "get",
-      url: "http://httpstat.us/302",
+      url: `${serverUrl}/302`,
+    });
+    expect(array[1].response).toMatchObject({
+      status: 302,
+      statusText: "Found",
+      headers: assembleTestHeaders(responses[1]),
     });
     expect(array[2].request).toMatchObject({
       method: "get",
-      url: "http://httpstat.us/404",
+      url: `${serverUrl}/404`,
     });
     expect(array[2].response).toMatchObject({
       status: 404,
       statusText: "Not Found",
+      headers: assembleTestHeaders(responses[2]),
     });
     expect(array[3].request).toMatchObject({
       method: "get",
-      url: "http://httpstat.us/500",
+      url: `${serverUrl}/500`,
     });
     expect(array[3].response).toMatchObject({
       status: 500,
       statusText: "Internal Server Error",
+      headers: assembleTestHeaders(responses[3]),
     });
     expect(array.length).toBe(4);
 
@@ -136,7 +186,7 @@ describe("axios-har-tracker e2e tests", () => {
   }, 20000);
 
   it("Should collect call with query parameters", async () => {
-    await axios.get("http://httpstat.us/200", {
+    const response = await axios.get(`${serverUrl}/200`, {
       params: {
         test: 1,
       },
@@ -146,7 +196,7 @@ describe("axios-har-tracker e2e tests", () => {
     const array = generatedHar.log.entries;
     expect(array[0].request).toMatchObject({
       method: "get",
-      url: "http://httpstat.us/200?test=1",
+      url: `${serverUrl}/200?test=1`,
       queryString: [
         {
           name: "test",
@@ -157,6 +207,7 @@ describe("axios-har-tracker e2e tests", () => {
     expect(array[0].response).toMatchObject({
       status: 200,
       statusText: "OK",
+      headers: assembleTestHeaders(response),
     });
     expect(array.length).toBe(1);
 
@@ -165,23 +216,24 @@ describe("axios-har-tracker e2e tests", () => {
 
   it("Should collect call with baseURL", async () => {
     let axiosInstance = axios.create({
-      baseURL: "http://httpstat.us",
+      baseURL: serverUrl,
     });
 
     axiosTracker = new AxiosHarTracker(axiosInstance);
 
-    await axiosInstance.get("/200", {
+    const response = await axiosInstance.get("/200", {
       validateStatus: (status) => status === 200
     });
     const generatedHar = axiosTracker.getGeneratedHar();
     const array = generatedHar.log.entries;
     expect(array[0].request).toMatchObject({
       method: "get",
-      url: "http://httpstat.us/200",
+      url: `${serverUrl}/200`,
     });
     expect(array[0].response).toMatchObject({
       status: 200,
       statusText: "OK",
+      headers: assembleTestHeaders(response),
     });
     expect(array.length).toBe(1);
 
@@ -190,12 +242,12 @@ describe("axios-har-tracker e2e tests", () => {
 
   it("Should collect call with baseURL and parameters", async () => {
     let axiosInstance = axios.create({
-      baseURL: "http://httpstat.us",
+      baseURL: serverUrl,
     });
 
     axiosTracker = new AxiosHarTracker(axiosInstance);
 
-    await axiosInstance.get("/200", {
+    const response = await axiosInstance.get("/200", {
       params: {
         test: 1,
       },
@@ -205,7 +257,7 @@ describe("axios-har-tracker e2e tests", () => {
     const array = generatedHar.log.entries;
     expect(array[0].request).toMatchObject({
       method: "get",
-      url: "http://httpstat.us/200?test=1",
+      url: `${serverUrl}/200?test=1`,
       queryString: [
         {
           name: "test",
@@ -216,6 +268,7 @@ describe("axios-har-tracker e2e tests", () => {
     expect(array[0].response).toMatchObject({
       status: 200,
       statusText: "OK",
+      headers: assembleTestHeaders(response),
     });
     expect(array.length).toBe(1);
 
@@ -223,5 +276,101 @@ describe("axios-har-tracker e2e tests", () => {
       "./harfiles/example-200-withParamsAndBaseURL.har",
       generatedHar
     );
+  });
+
+  it("should handle request cookies (as array) correctly", async () => {
+    const response = await axios.get(`${serverUrl}/200`, {
+      headers: {
+        Cookie: ["testCookie=value", "testCookie2=value2"],
+      },
+      validateStatus: (status) => status === 200
+    });
+    const generatedHar = axiosTracker.getGeneratedHar();
+    const array = generatedHar.log.entries;
+    expect(array[0].request).toMatchObject({
+      method: "get",
+      url: `${serverUrl}/200`,
+      cookies: [
+        { name: "testCookie", value: "value" },
+        { name: "testCookie2", value: "value2" },
+      ],
+      headers: [
+        { name: "Accept", value: "application/json, text/plain, */*"},
+        { name: "Content-Type", value: undefined },
+        { name: "Cookie", value: "testCookie=value; testCookie2=value2"}
+      ],
+    });
+    expect(array[0].response).toMatchObject({
+      status: 200,
+      statusText: "OK",
+      cookies: [
+        {
+          name: "test1",
+          domain: "foo.example.com",
+          expires: "2024-04-03T14:04:00.000Z",
+          httpOnly: true,
+          path: "/",
+          sameSite: "Strict",
+          secure: true
+        },
+        {
+          name: "test2",
+          domain: "foo.example.com",
+          expires: "2024-04-03T14:04:00.000Z",
+          path: "/docs",
+          sameSite: "Lax",
+        }
+      ],
+      headers: assembleTestHeaders(response),
+    });
+    expect(array.length).toBe(1);
+  });
+
+  it("should handle request cookies (as string) correctly", async () => {
+    const response = await axios.get(`${serverUrl}/200`, {
+      headers: {
+        Cookie: "testCookie=value; testCookie2=value2",
+      },
+      validateStatus: (status) => status === 200
+    });
+    const generatedHar = axiosTracker.getGeneratedHar();
+    const array = generatedHar.log.entries;
+    expect(array[0].request).toMatchObject({
+      method: "get",
+      url: `${serverUrl}/200`,
+      cookies: [
+        { name: "testCookie", value: "value" },
+        { name: "testCookie2", value: "value2" },
+      ],
+      headers: [
+        { name: "Accept", value: "application/json, text/plain, */*"},
+        { name: "Content-Type", value: undefined },
+        { name: "Cookie", value: "testCookie=value; testCookie2=value2"},
+      ],
+    });
+    expect(array[0].response).toMatchObject({
+      status: 200,
+      statusText: "OK",
+      cookies: [
+        {
+          name: "test1",
+          domain: "foo.example.com",
+          expires: "2024-04-03T14:04:00.000Z",
+          httpOnly: true,
+          path: "/",
+          sameSite: "Strict",
+          secure: true
+        },
+        {
+          name: "test2",
+          domain: "foo.example.com",
+          expires: "2024-04-03T14:04:00.000Z",
+          path: "/docs",
+          sameSite: "Lax",
+        }
+      ],
+      headers: assembleTestHeaders(response),
+    });
+    expect(array.length).toBe(1);
   });
 });
