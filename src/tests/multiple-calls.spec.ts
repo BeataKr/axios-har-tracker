@@ -2,6 +2,10 @@ import axios, {AxiosResponse} from "axios";
 import { AxiosHarTracker } from "../axios-har-tracker";
 import * as fse from "fs-extra";
 import {startServer, stopServer} from "./express";
+import * as fs from "fs";
+import * as path from "path";
+
+const exampleHtml = fs.readFileSync(path.resolve(__dirname, "example.html")).toString("utf-8");
 
 describe("axios-har-tracker e2e tests", () => {
   let axiosTracker: AxiosHarTracker;
@@ -21,7 +25,7 @@ describe("axios-har-tracker e2e tests", () => {
   });
 
   beforeAll(async () => {
-    fse.ensureDir("./harfiles");
+    await fse.ensureDir("./harfiles");
   });
 
   function assembleTestHeaders(response: AxiosResponse) {
@@ -59,6 +63,9 @@ describe("axios-har-tracker e2e tests", () => {
       statusText: "OK",
       headers: assembleTestHeaders(response),
     });
+    expect(array[0].response.content.text).toBe(exampleHtml);
+    expect(array[0].response.content.mimeType).toBe("text/html; charset=utf-8");
+    expect(array[0].response.content.size).toBe(119);
     expect(array.length).toBe(1);
 
     await fse.writeJson("./harfiles/example-200.har", generatedHar);
@@ -80,6 +87,9 @@ describe("axios-har-tracker e2e tests", () => {
       statusText: "Found",
       headers: assembleTestHeaders(response),
     });
+    expect(array[0].response.content.text).toBe(exampleHtml);
+    expect(array[0].response.content.mimeType).toBe("text/html; charset=utf-8");
+    expect(array[0].response.content.size).toBe(119);
     expect(array.length).toBe(1);
 
     await fse.writeJson("./harfiles/example-302.har", generatedHar);
@@ -100,6 +110,9 @@ describe("axios-har-tracker e2e tests", () => {
       statusText: "Not Found",
       headers: assembleTestHeaders(response),
     });
+    expect(array[0].response.content.text).toBe(exampleHtml);
+    expect(array[0].response.content.mimeType).toBe("text/html; charset=utf-8");
+    expect(array[0].response.content.size).toBe(119);
     expect(array.length).toBe(1);
 
     await fse.writeJson("./harfiles/example-404.har", generatedHar);
@@ -120,6 +133,9 @@ describe("axios-har-tracker e2e tests", () => {
       statusText: "Internal Server Error",
       headers: assembleTestHeaders(response),
     });
+    expect(array[0].response.content.text).toBe(exampleHtml);
+    expect(array[0].response.content.mimeType).toBe("text/html; charset=utf-8");
+    expect(array[0].response.content.size).toBe(119);
     expect(array.length).toBe(1);
 
     await fse.writeJson("./harfiles/example-500.har", generatedHar);
@@ -209,6 +225,9 @@ describe("axios-har-tracker e2e tests", () => {
       statusText: "OK",
       headers: assembleTestHeaders(response),
     });
+    expect(array[0].response.content.text).toBe(exampleHtml);
+    expect(array[0].response.content.mimeType).toBe("text/html; charset=utf-8");
+    expect(array[0].response.content.size).toBe(119);
     expect(array.length).toBe(1);
 
     await fse.writeJson("./harfiles/example-200-withParams.har", generatedHar);
@@ -235,6 +254,9 @@ describe("axios-har-tracker e2e tests", () => {
       statusText: "OK",
       headers: assembleTestHeaders(response),
     });
+    expect(array[0].response.content.text).toBe(exampleHtml);
+    expect(array[0].response.content.mimeType).toBe("text/html; charset=utf-8");
+    expect(array[0].response.content.size).toBe(119);
     expect(array.length).toBe(1);
 
     await fse.writeJson("./harfiles/example-200-withBaseURL.har", generatedHar);
@@ -270,6 +292,9 @@ describe("axios-har-tracker e2e tests", () => {
       statusText: "OK",
       headers: assembleTestHeaders(response),
     });
+    expect(array[0].response.content.text).toBe(exampleHtml);
+    expect(array[0].response.content.mimeType).toBe("text/html; charset=utf-8");
+    expect(array[0].response.content.size).toBe(119);
     expect(array.length).toBe(1);
 
     await fse.writeJson(

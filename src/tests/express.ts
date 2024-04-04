@@ -1,8 +1,12 @@
 import * as express from "express";
 import {Server} from "http";
+import * as fs from "fs";
+import * as path from "path";
 
 const app = express();
 let httpServer: Server;
+
+const exampleHtml = fs.readFileSync(path.resolve(__dirname, "example.html")).toString("utf-8");
 
 function defaultMiddleware(response: express.Response, status: number) {
   response.cookie("test1", "someId", {
@@ -23,7 +27,9 @@ function defaultMiddleware(response: express.Response, status: number) {
     secure: false
   });
 
-  return response.sendStatus(status);
+  response.status(status);
+
+  return response.send(exampleHtml);
 }
 
 app.get("/200", (req, res) => defaultMiddleware(res, 200));
