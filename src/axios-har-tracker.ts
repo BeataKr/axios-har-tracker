@@ -42,15 +42,18 @@ export class AxiosHarTracker {
   private generatedHar: HarFile;
   private newEntry: NewEntry;
   private creatorConfig: AxiosHarTrackerCreatorConfig;
+  private maxEntries: number;
 
   constructor(
     axiosModule: AxiosInstance,
     creatorConfig: AxiosHarTrackerCreatorConfig = {
       name: "axios-har-tracker",
       version: "0.1.0",
-    }
+    },
+    maxEntries?:number
   ) {
     this.axios = axiosModule;
+    this.maxEntries = maxEntries;
     this.creatorConfig = creatorConfig;
     this.resetHar();
 
@@ -64,6 +67,7 @@ export class AxiosHarTracker {
         if (error.request) {
           this.newEntry.request = this.returnRequestObject(error.request);
           this.generatedHar.log.entries.push(this.newEntry);
+          this.pruneLog();
         }
         return Promise.reject(error);
       }
@@ -163,6 +167,13 @@ export class AxiosHarTracker {
   private pushNewEntryResponse(response) {
     this.newEntry.response = this.returnResponseObject(response);
     this.generatedHar.log.entries.push(this.newEntry);
+    this.pruneLog();
+  }
+
+  private pruneLog() {
+    if (this.maxEntries !== undefined && this.generatedHar.log.entries?.length > this.maxEntries) {
+     this.generatedHar.log.entries.shift();
+    }
   }
 
   private generateNewEntry() {
