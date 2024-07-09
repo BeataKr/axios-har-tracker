@@ -31,6 +31,8 @@ which will be passed into `AxiosHarTracker` constructor:
 ```js
 const axiosTracker = new AxiosHarTracker(axios);
 ```
+The constructor takes an optional second object for creator configuration and an optional third argument ```maxEntries```, which will prevent
+the log from growing beyond that size.
 
 In order to perform an actual request use the axios.get/post/delete... call, examples:
 

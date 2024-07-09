@@ -102,7 +102,17 @@ describe("axios-har-tracker e2e tests", () => {
     await fse.writeJson("./harfiles/example-500.har", generatedHar);
   });
 
-  it("Should collect multiple calls", async () => {
+  it("Should collect multiple calls up to a max of 4", async () => {
+
+    axiosTracker = new AxiosHarTracker(axios, undefined, 4);
+
+    //This one will get pruned
+    await axios.get("http://httpstat.us/200", {
+      params: {
+        test: 1,
+      },
+    });
+
     await axios.get("http://httpstat.us/200");
     try {
       await axios.get("http://httpstat.us/302");
@@ -125,8 +135,13 @@ describe("axios-har-tracker e2e tests", () => {
         "An expected error appears after call to http://httpstat.us/500"
       );
     }
+
     const generatedHar = axiosTracker.getGeneratedHar();
     const array = generatedHar.log.entries;
+
+    //5 requests were made but maxEntries is 4
+    expect(array.length).toEqual(4);
+
     expect(array[0].request).toMatchObject({
       method: "get",
       url: "http://httpstat.us/200",
