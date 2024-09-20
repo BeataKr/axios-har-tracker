@@ -1,5 +1,4 @@
-import { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
-// import * as cookie from "cookie";
+import {AxiosInstance, AxiosRequestConfig, AxiosResponse} from "axios";
 import * as qs from "qs";
 import * as cookieParser from "set-cookie-parser";
 
@@ -15,9 +14,58 @@ interface HarFile {
   };
 }
 
+interface RequestObject {
+  method: string;
+  url: string;
+  httpVersion: string;
+  cookies: {name: string; value: string}[];
+  headers: { name: string; value: string }[];
+  queryString: { name: string; value: any }[];
+  headersSize: number;
+  bodySize: number;
+  content: { size: number; mimeType: string; text: string };
+  postData?: { mimeType: string; text: string; }
+}
+
+interface ResponseObject {
+  status: number | string;
+  statusText: string;
+  headers: {name: string; value: string}[];
+  startedDateTime: string;
+  time: number;
+  httpVersion: string;
+  cookies: {
+    path?: string;
+    expires?: string;
+    maxAge?: number;
+    domain?: string;
+    sameSite?: string;
+    name: string;
+    httpOnly?: boolean;
+    secure?: boolean;
+    value: string
+  }[];
+  bodySize: number;
+  redirectURL: string;
+  headersSize: number;
+  content: { size: number; mimeType: string; text: string };
+  cache: {};
+  timings: {
+    receive: number;
+    wait: number;
+    blocked: number;
+    dns: number;
+    ssl: number;
+    send: number;
+    _blocked_queueing: number;
+    connect: number
+  };
+}
+
+
 interface NewEntry {
-  request: {};
-  response: {};
+  request?: RequestObject;
+  response?: ResponseObject;
   startedDateTime: string;
   time: number;
   cache: {};
@@ -71,7 +119,7 @@ export class AxiosHarTracker {
     );
   }
 
-  private returnRequestObject(config: AxiosRequestConfig) {
+  private returnRequestObject(config: AxiosRequestConfig): RequestObject {
 
     const cookies = [];
     const cookieHeaders = [];
@@ -108,7 +156,12 @@ export class AxiosHarTracker {
       .filter((header) => header.name === "Cookie" || header.name === "cookie")
       .forEach((header) => header.value = cookies.map((cookieObj) => `${cookieObj.name}=${cookieObj.value}`).join("; "));
 
-    const requestObject: any = {
+    let contentText = "";
+    if(config.data) {
+      contentText = typeof config.data === "string" ? config.data : JSON.stringify(config.data);
+    }
+
+    const requestObject: RequestObject = {
       method: config.method,
       url: this.getURL(config),
       httpVersion: "HTTP/1.1",
@@ -118,21 +171,21 @@ export class AxiosHarTracker {
       headersSize: -1,
       bodySize: config.data ? JSON.stringify(config.data).length : 0,
       content: {
-        size: config.data ? JSON.stringify(config.data).length : 0,
+        size: contentText.length,
         mimeType: this.getMimeType(config),
-        text: config.data ? JSON.stringify(config.data) : "",
+        text: contentText,
       },
     };
     if (config.data) {
       requestObject.postData = {
         mimeType: config.headers["Content-Type"],
-        text: JSON.stringify(config.data),
+        text: contentText,
       };
     }
     return requestObject;
   }
 
-  private returnResponseObject(response: AxiosResponse) {
+  private returnResponseObject(response: AxiosResponse): ResponseObject {
 
     const rawHeaders = response.headers ? this.getHeaders(response.headers) : [];
     const headers = [];
@@ -157,6 +210,11 @@ export class AxiosHarTracker {
         expires: cookie.expires ? cookie.expires.toISOString() : undefined,
       }));
 
+      let contentText = "";
+      if(response.data) {
+        contentText = typeof response.data === "string" ? response.data : JSON.stringify(response.data);
+      }
+
       return {
         status: response.status ? response.status : "",
         statusText: response.statusText ? response.statusText : "",
@@ -174,9 +232,9 @@ export class AxiosHarTracker {
         redirectURL: "",
         headersSize: -1,
         content: {
-          size: response.data ? JSON.stringify(response.data).length : 0,
+          size: contentText.length,
           mimeType: this.getMimeType(response),
-          text: response.data ? JSON.stringify(response.data) : "",
+          text: contentText,
         },
         cache: {},
         timings: {
@@ -209,8 +267,6 @@ export class AxiosHarTracker {
 
   private generateNewEntry() {
     const newEntry: NewEntry = {
-      request: {},
-      response: {},
       startedDateTime: new Date().toISOString(),
       time: -1,
       cache: {},
@@ -235,7 +291,7 @@ export class AxiosHarTracker {
   private checkObj(value: any) {
     let results;
     if (typeof value === "object" && value !== null) {
-      results = JSON.stringify(value);
+      results = Array.isArray(value) ? value : JSON.stringify(value);
     } else results = value;
     return results;
   }
@@ -250,12 +306,6 @@ export class AxiosHarTracker {
     });
     return obj ? results : [];
   }
-
-  // private getCookies(fullCookie: string) {
-  //   return fullCookie
-  //     ? this.transformObjectToArray(cookie.parse(fullCookie), false)
-  //     : [];
-  // }
 
   private getParams(params) {
     return params ? this.transformObjectToArray(params, true) : [];
