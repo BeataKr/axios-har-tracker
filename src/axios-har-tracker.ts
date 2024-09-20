@@ -54,20 +54,20 @@ export class AxiosHarTracker {
     this.creatorConfig = creatorConfig;
     this.resetHar();
 
-    this.axios.interceptors.request.use(
-      async (config) => {
-        this.newEntry = this.generateNewEntry();
-        this.newEntry.request = this.returnRequestObject(config);
-        return config;
-      },
-      async (error) => {
-        if (error.request) {
-          this.newEntry.request = this.returnRequestObject(error.request);
-          this.generatedHar.log.entries.push(this.newEntry);
-        }
-        return Promise.reject(error);
-      }
-    );
+    // this.axios.interceptors.request.use(
+    //   async (config) => {
+    //     this.newEntry = this.generateNewEntry();
+    //     this.newEntry.request = this.returnRequestObject(config);
+    //     return config;
+    //   },
+    //   async (error) => {
+    //     if (error.request) {
+    //       this.newEntry.request = this.returnRequestObject(error.request);
+    //       this.generatedHar.log.entries.push(this.newEntry);
+    //     }
+    //     return Promise.reject(error);
+    //   }
+    // );
 
     this.axios.interceptors.response.use(
       async (resp) => {
@@ -161,7 +161,9 @@ export class AxiosHarTracker {
   }
 
   private pushNewEntryResponse(response) {
-    this.newEntry.response = this.returnResponseObject(response);
+    const newEntry = this.generateNewEntry();
+    newEntry.request = this.returnRequestObject(response.config);
+    newEntry.response = this.returnResponseObject(response);
     this.generatedHar.log.entries.push(this.newEntry);
   }
 
