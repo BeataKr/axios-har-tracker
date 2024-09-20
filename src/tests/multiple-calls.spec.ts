@@ -1,17 +1,27 @@
 import axios from "axios";
 import { AxiosHarTracker } from "../axios-har-tracker";
 import * as fse from "fs-extra";
+// import {startServer, stopServer} from "./express";
 
 describe("axios-har-tracker e2e tests", () => {
-  let axiosTracker;
+  let axiosTracker: AxiosHarTracker;
+  // let serverUrl: string;
 
   beforeEach(async () => {
     axiosTracker = new AxiosHarTracker(axios);
   });
 
   beforeAll(async () => {
+    // const port = await startServer();
+    // serverUrl = `http://localhost:${port}`;
+
     fse.ensureDir("./harfiles");
   });
+
+  // afterAll(async () => {
+  //   await stopServer();
+  // });
+  
 
   it("Should collect call with status 200", async () => {
     try {
