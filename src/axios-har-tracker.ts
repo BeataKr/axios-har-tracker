@@ -62,7 +62,6 @@ interface ResponseObject {
   };
 }
 
-
 interface NewEntry {
   request?: RequestObject;
   response?: ResponseObject;
@@ -103,6 +102,21 @@ export class AxiosHarTracker {
     this.creatorConfig = creatorConfig;
     this.resetHar();
 
+    this.axios.interceptors.request.use(
+      async (config) => {
+        this.newEntry = this.generateNewEntry();
+        this.newEntry.request = this.returnRequestObject(config);
+        return config;
+      },
+      async (error) => {
+        if (error.request) {
+          this.newEntry.request = this.returnRequestObject(error.request);
+          this.generatedHar.log.entries.push(this.newEntry);
+        }
+        return Promise.reject(error);
+      }
+    );
+
     this.axios.interceptors.response.use(
       async (resp) => {
         this.pushNewEntryResponse(resp);
@@ -120,7 +134,6 @@ export class AxiosHarTracker {
   }
 
   private returnRequestObject(config: AxiosRequestConfig): RequestObject {
-
     const cookies = [];
     const cookieHeaders = [];
 
@@ -176,17 +189,18 @@ export class AxiosHarTracker {
         text: contentText,
       },
     };
+
     if (config.data) {
       requestObject.postData = {
         mimeType: config.headers["Content-Type"],
         text: contentText,
       };
     }
+
     return requestObject;
   }
 
   private returnResponseObject(response: AxiosResponse): ResponseObject {
-
     const rawHeaders = response.headers ? this.getHeaders(response.headers) : [];
     const headers = [];
 
@@ -210,44 +224,44 @@ export class AxiosHarTracker {
         expires: cookie.expires ? cookie.expires.toISOString() : undefined,
       }));
 
-      let contentText = "";
-      if(response.data) {
-        contentText = typeof response.data === "string" ? response.data : JSON.stringify(response.data);
-      }
+     let contentText = "";
+     if(response.data) {
+       contentText = typeof response.data === "string" ? response.data : JSON.stringify(response.data);
+     }
 
-      return {
-        status: response.status ? response.status : "",
-        statusText: response.statusText ? response.statusText : "",
-        headers,
-        startedDateTime: new Date().toISOString(),
-        time: response.headers
-          ? Math.round(
-            process.hrtime(response.headers["request-startTime"])[0] * 1000 +
-            process.hrtime(response.headers["request-startTime"])[1] / 1000000
-          )
-          : 0,
-        httpVersion: "HTTP/1.1",
-        cookies,
-        bodySize: response.data ? JSON.stringify(response.data).length : 0,
-        redirectURL: "",
-        headersSize: -1,
-        content: {
-          size: contentText.length,
-          mimeType: this.getMimeType(response),
-          text: contentText,
-        },
-        cache: {},
-        timings: {
-          blocked: -1,
-          dns: -1,
-          ssl: -1,
-          connect: -1,
-          send: 10,
-          wait: 10,
-          receive: 10,
-          _blocked_queueing: -1,
-        },
-      };
+    return {
+      status: response.status ? response.status : "",
+      statusText: response.statusText ? response.statusText : "",
+      headers,
+      startedDateTime: new Date().toISOString(),
+      time: response.headers
+        ? Math.round(
+          process.hrtime(response.headers["request-startTime"])[0] * 1000 +
+          process.hrtime(response.headers["request-startTime"])[1] / 1000000
+        )
+        : 0,
+      httpVersion: "HTTP/1.1",
+      cookies,
+      bodySize: response.data ? JSON.stringify(response.data).length : 0,
+      redirectURL: "",
+      headersSize: -1,
+      content: {
+        size: contentText.length,
+        mimeType: this.getMimeType(response),
+        text: contentText,
+      },
+      cache: {},
+      timings: {
+        blocked: -1,
+        dns: -1,
+        ssl: -1,
+        connect: -1,
+        send: 10,
+        wait: 10,
+        receive: 10,
+        _blocked_queueing: -1,
+      },
+    };
   }
 
   private getMimeType(resp) {
@@ -259,9 +273,7 @@ export class AxiosHarTracker {
   }
 
   private pushNewEntryResponse(response) {
-    const newEntry = this.generateNewEntry();
-    newEntry.request = this.returnRequestObject(response.config);
-    newEntry.response = this.returnResponseObject(response);
+    this.newEntry.response = this.returnResponseObject(response);
     this.generatedHar.log.entries.push(this.newEntry);
   }
 
