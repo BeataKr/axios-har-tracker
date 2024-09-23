@@ -322,7 +322,9 @@ describe("axios-har-tracker e2e tests", () => {
       headers: [
         { name: "Accept", value: "application/json, text/plain, */*"},
         { name: "Content-Type", value: undefined },
-        { name: "Cookie", value: "testCookie=value; testCookie2=value2"}
+        { name: "Cookie", value: "testCookie=value; testCookie2=value2"},
+        { name: "User-Agent", value: "axios/1.7.7" },
+        { name: "Accept-Encoding", value: "gzip, compress, deflate, br"}
       ],
     });
     expect(array[0].response).toMatchObject({
@@ -371,6 +373,8 @@ describe("axios-har-tracker e2e tests", () => {
         { name: "Accept", value: "application/json, text/plain, */*"},
         { name: "Content-Type", value: undefined },
         { name: "Cookie", value: "testCookie=value; testCookie2=value2"},
+        { name: "User-Agent", value: "axios/1.7.7" },
+        { name: "Accept-Encoding", value: "gzip, compress, deflate, br"},
       ],
     });
     expect(array[0].response).toMatchObject({
@@ -397,5 +401,33 @@ describe("axios-har-tracker e2e tests", () => {
       headers: assembleTestHeaders(response),
     });
     expect(array.length).toBe(1);
+  });
+
+  it('Should collect concurrent calls', async () => {
+    function fetch (url) {
+      function wrap (resolve, reject) {
+        axios.get(url)
+          .then(resolve)
+          .catch((error) => {
+            console.log('error while fetching', url, error);
+            resolve();
+          });
+      }
+      return new Promise(wrap);
+    }
+
+    return Promise.all([
+      fetch('http://httpstat.us/200?msg=A'),
+      fetch('http://httpstat.us/200?msg=hello'),
+      fetch('http://httpstat.us/200?msg=C'),
+      fetch('http://httpstat.us/200?msg=D')
+    ]).then(async (results) => {
+      console.log("OUT RESULTS", results);
+      const generatedHar = axiosTracker.getGeneratedHar();
+      const array = generatedHar.log.entries;
+      console.log("OUT ENTRIES", array);
+      expect(array.length).toBe(4);
+      await fse.writeJson('./harfiles/example-multiple-concurrent-test.har', generatedHar);
+    });
   });
 });

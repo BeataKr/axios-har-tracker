@@ -273,8 +273,10 @@ export class AxiosHarTracker {
   }
 
   private pushNewEntryResponse(response) {
-    this.newEntry.response = this.returnResponseObject(response);
-    this.generatedHar.log.entries.push(this.newEntry);
+    const newEntry = this.generateNewEntry();
+    newEntry.request = this.returnRequestObject(response.config);
+    newEntry.response = this.returnResponseObject(response);
+    this.generatedHar.log.entries.push(newEntry);
   }
 
   private generateNewEntry() {
