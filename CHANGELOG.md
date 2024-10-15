@@ -1,6 +1,13 @@
-## 0.7.0
+## 0.7.2
+
+Fix changelog
+
+## 0.7.1
 
 - allows correct tracing when using with Promise.all or similar concurrency routines (thanks @bewest https://github.com/BeataKr/axios-har-tracker/pull/14)
+
+## 0.7.0
+
 - fixed cookie handling (thanks @schw4rzlicht https://github.com/BeataKr/axios-har-tracker/pull/17)
 - fixed body output (thanks @schw4rzlicht https://github.com/BeataKr/axios-har-tracker/pull/18)
 
