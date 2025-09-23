@@ -3,9 +3,8 @@ name: Cross-Platform Tests
 on:
   pull_request:
     branches: [ master, main ]
-  schedule:
-    # Uruchom testy codziennie o 2:00 UTC
-    - cron: '0 2 * * *'
+#   schedule:
+#     - cron: '0 2 * * *'
 
 jobs:
   test:
