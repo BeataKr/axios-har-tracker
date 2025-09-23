@@ -2,7 +2,7 @@ name: Cross-Platform Tests
 
 on:
   pull_request:
-    branches: [ master, main ]
+    branches: [ master ]
 #   schedule:
 #     - cron: '0 2 * * *'
 

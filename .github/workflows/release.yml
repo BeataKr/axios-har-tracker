@@ -1,0 +1,147 @@
+name: Auto Release
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  check-version:
+    runs-on: ubuntu-latest
+    outputs:
+      version-changed: ${{ steps.check.outputs.changed }}
+      new-version: ${{ steps.check.outputs.version }}
+      
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 2
+        
+    - name: Check if version changed
+      id: check
+      run: |
+        # Check current version
+        CURRENT_VERSION=$(node -p "require('./package.json').version")
+        echo "Current version: $CURRENT_VERSION"
+
+        # Get previous version (from previous commit)
+        git checkout HEAD~1 -- package.json 2>/dev/null || echo "No previous version"
+        PREVIOUS_VERSION=$(node -p "require('./package.json').version" 2>/dev/null || echo "0.0.0")
+        echo "Previous version: $PREVIOUS_VERSION"
+
+        # Restore current package.json
+        git checkout HEAD -- package.json
+        
+        # Check if version changed
+        if [ "$CURRENT_VERSION" != "$PREVIOUS_VERSION" ]; then
+          echo "Version changed from $PREVIOUS_VERSION to $CURRENT_VERSION"
+          echo "changed=true" >> $GITHUB_OUTPUT
+          echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+        else
+          echo "Version unchanged"
+          echo "changed=false" >> $GITHUB_OUTPUT
+          echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+        fi
+
+  build-and-test:
+    needs: check-version
+    if: needs.check-version.outputs.version-changed == 'true'
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Run tests
+      run: npm test
+      
+    - name: Build package
+      run: npm run build
+      
+    - name: Create package tarball
+      run: npm pack
+      
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: package-build
+        path: |
+          dist/
+          *.tgz
+        retention-days: 90
+
+  create-release:
+    needs: [check-version, build-and-test]
+    if: needs.check-version.outputs.version-changed == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Download build artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: package-build
+        
+    - name: Generate changelog for release
+      id: changelog
+      run: |
+        VERSION="v${{ needs.check-version.outputs.new-version }}"
+        echo "Generating changelog for $VERSION"
+
+        # Check if CHANGELOG.md exists
+        if [ -f "CHANGELOG.md" ]; then
+          # Extract section for current version
+          CHANGELOG_CONTENT=$(sed -n "/## \[${{ needs.check-version.outputs.new-version }}\]/,/## \[/p" CHANGELOG.md | sed '$d' | tail -n +2)
+          if [ -z "$CHANGELOG_CONTENT" ]; then
+            CHANGELOG_CONTENT="Changes in version ${{ needs.check-version.outputs.new-version }}"
+          fi
+        else
+          CHANGELOG_CONTENT="Changes in version ${{ needs.check-version.outputs.new-version }}"
+        fi
+
+        # Save changelog to file
+        echo "$CHANGELOG_CONTENT" > release-notes.md
+        echo "changelog-file=release-notes.md" >> $GITHUB_OUTPUT
+        
+    - name: Create Git Tag
+      run: |
+        VERSION="v${{ needs.check-version.outputs.new-version }}"
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git tag -a "$VERSION" -m "Release $VERSION"
+        git push origin "$VERSION"
+        
+    - name: Create GitHub Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: v${{ needs.check-version.outputs.new-version }}
+        release_name: Release v${{ needs.check-version.outputs.new-version }}
+        body_path: release-notes.md
+        draft: false
+        prerelease: false
+        
+    - name: Upload Release Assets
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./axios-har-tracker-${{ needs.check-version.outputs.new-version }}.tgz
+        asset_name: axios-har-tracker-${{ needs.check-version.outputs.new-version }}.tgz
+        asset_content_type: application/gzip

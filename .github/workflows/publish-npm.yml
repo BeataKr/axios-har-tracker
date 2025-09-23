@@ -1,0 +1,50 @@
+name: Publish to NPM
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        registry-url: 'https://registry.npmjs.org'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Run tests
+      run: npm test
+      
+    - name: Build package
+      run: npm run build
+      
+    - name: Verify package contents
+      run: |
+        echo "Package contents:"
+        npm pack --dry-run
+        
+    - name: Publish to npm
+      run: npm publish --provenance --access public
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        
+    - name: Create npm publish summary
+      run: |
+        echo "## 📦 Package Published Successfully" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Package**: $(node -p 'require(\"./package.json\").name')" >> $GITHUB_STEP_SUMMARY
+        echo "**Version**: $(node -p 'require(\"./package.json\").version')" >> $GITHUB_STEP_SUMMARY
+        echo "**Registry**: https://www.npmjs.com/package/$(node -p 'require(\"./package.json\").name')" >> $GITHUB_STEP_SUMMARY
