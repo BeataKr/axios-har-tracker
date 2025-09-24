@@ -1,10 +1,11 @@
 name: Cross-Platform Tests
 
 on:
-  pull_request:
-    branches: [ master ]
-#   schedule:
-#     - cron: '0 2 * * *'
+  # pull_request:
+  #   branches: [ master ]
+  schedule:
+    - cron: '0 2 * * 1'  # Poniedziałek o 2:00 UTC
+  workflow_dispatch:  # Możliwość ręcznego uruchomienia
 
 jobs:
   test:

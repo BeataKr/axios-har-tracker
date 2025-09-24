@@ -3,6 +3,9 @@ name: Auto Release (Modern)
 on:
   push:
     branches: [ master ]
+    paths:
+      - 'package.json'
+  workflow_dispatch:
 
 jobs:
   check-version:
