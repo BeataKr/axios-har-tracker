@@ -6,10 +6,11 @@
   "scripts": {
     "prebuild": "rimraf ./dist ./coverage ./testresults ./harfiles",
     "build": "tsc",
-    "test": "jest",
+    "test": "jest --coverage",
     "pretest": "rimraf ./harfiles",
     "posttest": "node ./scripts/jest-join-coverage.js",
-    "prepublish": "npm run build"
+    "prepublish": "npm run build",
+    "test:coverage": "jest --coverage --coverageDirectory=coverage"
   },
   "author": "Beata Kruzycka",
   "keywords": [

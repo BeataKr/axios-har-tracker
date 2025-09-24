@@ -1,28 +1,42 @@
-const name = 'har-axios-tracker';
-const suiteName = 'har-axios-tracker-suite';
+const name = "har-axios-tracker";
+const suiteName = "har-axios-tracker-suite";
 
 module.exports = {
   verbose: true,
   name,
-  testMatch: ['**/+(*.)+(spec|test).+(ts|js)?(x)'],
-  moduleFileExtensions: ['ts', 'js', 'html'],
-  testPathIgnorePatterns: ['/dist/', '/node_modules/', '/scripts/'],
+  testMatch: ["**/+(*.)+(spec|test).+(ts|js)?(x)"],
+  moduleFileExtensions: ["ts", "js", "html"],
+  testPathIgnorePatterns: ["/dist/", "/node_modules/", "/scripts/"],
   transform: {
-    '^.+\\.(ts|js|html)$': 'ts-jest'
+    "^.+\\.(ts|js|html)$": "ts-jest",
   },
   reporters: [
-    'default',
+    "default",
     [
-      'jest-junit',
+      "jest-junit",
       {
-        outputDirectory: './testresults/',
+        outputDirectory: "./testresults/",
         outputName: `junit-${new Date().getTime()}.xml`,
         suiteName,
         titleTemplate: `${suiteName} › {classname} › {title}`,
-        ancestorSeparator: ' › '
-      }
-    ]
+        ancestorSeparator: " › ",
+      },
+    ],
   ],
+  coverageDirectory: "coverage",
   collectCoverage: true,
-  coverageReporters: ['lcov', 'cobertura', 'json']
+  coverageReporters: ["text", "lcov", "html"],
+  collectCoverageFrom: [
+    "src/**/*.{js,ts}",
+    "!src/**/*.d.ts",
+    "!src/**/*.test.{js,ts}",
+  ],
+  coverageThreshold: {
+    global: {
+      branches: 80,
+      functions: 80,
+      lines: 80,
+      statements: 80
+    }
+  }
 };
