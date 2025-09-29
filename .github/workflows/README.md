@@ -39,14 +39,7 @@ This folder contains GitHub Actions configurations for the axios-har-tracker pro
   - Git tag creation
   - GitHub Release creation with assets
 
-### 5. `release-modern.yml` - Automatic Releases (Modern)
-- **Triggered**: on push to master when package.json version changes
-- **Features**:
-  - Uses latest GitHub Actions
-  - Automatic release notes generation
-  - Package tarball attachment
-
-### 6. `publish-npm.yml` - NPM Publishing
+### 5. `publish-npm.yml` - NPM Publishing
 - **Triggered**: automatically after release creation
 - **Features**:
   - Publishes to npmjs.org

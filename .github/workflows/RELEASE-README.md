@@ -14,15 +14,7 @@ This folder contains workflows for automatic release creation and package publis
   - Creates Git tag
   - Creates GitHub Release with attachments
 
-### 2. `release-modern.yml` - Automatic Releases (Modern)
-- **Triggered**: on push to master  
-- **Conditions**: runs only when version in `package.json` changes
-- **Features**:
-  - Uses latest GitHub Actions
-  - Automatically generates release notes
-  - Attaches compiled `.tgz` package
-
-### 3. `publish-npm.yml` - NPM Publishing
+### 2. `publish-npm.yml` - NPM Publishing
 - **Triggered**: automatically after release creation
 - **Features**:
   - Publishes package to npmjs.org
