@@ -10,6 +10,7 @@ jobs:
     outputs:
       version-changed: ${{ steps.check.outputs.changed }}
       new-version: ${{ steps.check.outputs.version }}
+      previous-version: ${{ steps.check.outputs.previous-version }}
       
     steps:
     - name: Checkout code
@@ -24,31 +25,43 @@ jobs:
         CURRENT_VERSION=$(node -p "require('./package.json').version")
         echo "Current version: $CURRENT_VERSION"
 
-        # Get previous version (from previous commit)
-        git checkout HEAD~1 -- package.json 2>/dev/null || echo "No previous version"
-        PREVIOUS_VERSION=$(node -p "require('./package.json').version" 2>/dev/null || echo "0.0.0")
+        # Get previous version using git show (safer method)
+        PREVIOUS_VERSION=$(git show HEAD~1:package.json | node -p "JSON.parse(require('fs').readFileSync('/dev/stdin', 'utf8')).version" 2>/dev/null || echo "0.0.0")
         echo "Previous version: $PREVIOUS_VERSION"
-
-        # Restore current package.json
-        git checkout HEAD -- package.json
         
         # Check if version changed
         if [ "$CURRENT_VERSION" != "$PREVIOUS_VERSION" ]; then
-          echo "Version changed from $PREVIOUS_VERSION to $CURRENT_VERSION"
+          echo "✅ Version changed from $PREVIOUS_VERSION to $CURRENT_VERSION"
           echo "changed=true" >> $GITHUB_OUTPUT
           echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          echo "previous-version=$PREVIOUS_VERSION" >> $GITHUB_OUTPUT
         else
-          echo "Version unchanged"
+          echo "❌ Version unchanged ($CURRENT_VERSION)"
           echo "changed=false" >> $GITHUB_OUTPUT
           echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          echo "previous-version=$PREVIOUS_VERSION" >> $GITHUB_OUTPUT
         fi
+        
+        # Debug output values
+        echo "=== DEBUG OUTPUT VALUES ==="
+        echo "changed=$([ "$CURRENT_VERSION" != "$PREVIOUS_VERSION" ] && echo "true" || echo "false")"
+        echo "version=$CURRENT_VERSION"
+        echo "previous-version=$PREVIOUS_VERSION"
+        echo "=========================="
 
   build-and-test:
     needs: check-version
-    if: needs.check-version.outputs.version-changed == 'true'
+    if: ${{ needs.check-version.outputs.version-changed == 'true' }}
     runs-on: ubuntu-latest
     
     steps:
+    - name: Debug condition
+      run: |
+        echo "=== DEBUG BUILD-AND-TEST JOB ==="
+        echo "version-changed output: '${{ needs.check-version.outputs.version-changed }}'"
+        echo "Condition result: ${{ needs.check-version.outputs.version-changed == 'true' }}"
+        echo "=========================="
+        
     - name: Checkout code
       uses: actions/checkout@v4
       
@@ -81,7 +94,7 @@ jobs:
 
   create-release:
     needs: [check-version, build-and-test]
-    if: needs.check-version.outputs.version-changed == 'true'
+    if: ${{ needs.check-version.outputs.version-changed == 'true' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -109,7 +122,11 @@ jobs:
             CHANGELOG_CONTENT="Changes in version ${{ needs.check-version.outputs.new-version }}"
           fi
         else
-          CHANGELOG_CONTENT="Changes in version ${{ needs.check-version.outputs.new-version }}"
+          CHANGELOG_CONTENT="## What's Changed
+
+Version ${{ needs.check-version.outputs.new-version }}
+
+**Full Changelog**: https://github.com/${{ github.repository }}/compare/v${{ needs.check-version.outputs.previous-version }}...v${{ needs.check-version.outputs.new-version }}"
         fi
 
         # Save changelog to file
@@ -125,23 +142,14 @@ jobs:
         git push origin "$VERSION"
         
     - name: Create GitHub Release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      uses: softprops/action-gh-release@v2
       with:
         tag_name: v${{ needs.check-version.outputs.new-version }}
-        release_name: Release v${{ needs.check-version.outputs.new-version }}
+        name: Release v${{ needs.check-version.outputs.new-version }}
         body_path: release-notes.md
         draft: false
         prerelease: false
-        
-    - name: Upload Release Assets
-      uses: actions/upload-release-asset@v1
+        files: |
+          *.tgz
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./axios-har-tracker-${{ needs.check-version.outputs.new-version }}.tgz
-        asset_name: axios-har-tracker-${{ needs.check-version.outputs.new-version }}.tgz
-        asset_content_type: application/gzip
