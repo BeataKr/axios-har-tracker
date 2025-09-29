@@ -1,6 +1,14 @@
-import {AxiosInstance, AxiosRequestConfig, AxiosResponse} from "axios";
+import {AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig} from "axios";
 import * as qs from "qs";
 import * as cookieParser from "set-cookie-parser";
+
+// extend the axios request config with a context so that we can persist properties
+// from the request interceptor to the response interceptor
+declare module 'axios' {
+  export interface InternalAxiosRequestConfig {
+    context: any;
+  }
+}
 
 interface HarFile {
   log: {
@@ -104,7 +112,8 @@ export class AxiosHarTracker {
 
     this.axios.interceptors.request.use(
       async (config) => {
-        this.newEntry = this.generateNewEntry();
+        config.context = {startTime: Date.now()}
+        this.newEntry = this.generateNewEntry(config);
         this.newEntry.request = this.returnRequestObject(config);
         return config;
       },
@@ -273,16 +282,17 @@ export class AxiosHarTracker {
   }
 
   private pushNewEntryResponse(response) {
-    const newEntry = this.generateNewEntry();
+    const newEntry = this.generateNewEntry(response.config);
     newEntry.request = this.returnRequestObject(response.config);
     newEntry.response = this.returnResponseObject(response);
     this.generatedHar.log.entries.push(newEntry);
   }
 
-  private generateNewEntry() {
+  private generateNewEntry(config: InternalAxiosRequestConfig<any>) {
     const newEntry: NewEntry = {
-      startedDateTime: new Date().toISOString(),
-      time: -1,
+      startedDateTime: new Date(config.context.startTime).toISOString(),
+      // this is the duration (milliseconds) when called from pushNewEntryResponse
+      time: Date.now() - config.context.startTime,
       cache: {},
       timings: {
         blocked: -1,
