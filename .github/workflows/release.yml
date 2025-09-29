@@ -1,8 +1,9 @@
-name: Auto Release
+name: Release and Publish
 
 on:
   push:
     branches: [ master ]
+  workflow_dispatch:
 
 jobs:
   check-version:
@@ -21,47 +22,32 @@ jobs:
     - name: Check if version changed
       id: check
       run: |
-        # Check current version
         CURRENT_VERSION=$(node -p "require('./package.json').version")
         echo "Current version: $CURRENT_VERSION"
 
-        # Get previous version using git show (safer method)
         PREVIOUS_VERSION=$(git show HEAD~1:package.json | node -p "JSON.parse(require('fs').readFileSync('/dev/stdin', 'utf8')).version" 2>/dev/null || echo "0.0.0")
         echo "Previous version: $PREVIOUS_VERSION"
         
-        # Check if version changed
         if [ "$CURRENT_VERSION" != "$PREVIOUS_VERSION" ]; then
           echo "✅ Version changed from $PREVIOUS_VERSION to $CURRENT_VERSION"
           echo "changed=true" >> $GITHUB_OUTPUT
-          echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
-          echo "previous-version=$PREVIOUS_VERSION" >> $GITHUB_OUTPUT
         else
           echo "❌ Version unchanged ($CURRENT_VERSION)"
           echo "changed=false" >> $GITHUB_OUTPUT
-          echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
-          echo "previous-version=$PREVIOUS_VERSION" >> $GITHUB_OUTPUT
         fi
         
-        # Debug output values
-        echo "=== DEBUG OUTPUT VALUES ==="
-        echo "changed=$([ "$CURRENT_VERSION" != "$PREVIOUS_VERSION" ] && echo "true" || echo "false")"
-        echo "version=$CURRENT_VERSION"
-        echo "previous-version=$PREVIOUS_VERSION"
-        echo "=========================="
+        echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+        echo "previous-version=$PREVIOUS_VERSION" >> $GITHUB_OUTPUT
 
-  build-and-test:
+  release-and-publish:
     needs: check-version
     if: ${{ needs.check-version.outputs.version-changed == 'true' }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
     
     steps:
-    - name: Debug condition
-      run: |
-        echo "=== DEBUG BUILD-AND-TEST JOB ==="
-        echo "version-changed output: '${{ needs.check-version.outputs.version-changed }}'"
-        echo "Condition result: ${{ needs.check-version.outputs.version-changed == 'true' }}"
-        echo "=========================="
-        
     - name: Checkout code
       uses: actions/checkout@v4
       
@@ -69,6 +55,7 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '20.x'
+        registry-url: 'https://registry.npmjs.org'
         cache: 'npm'
         
     - name: Install dependencies
@@ -80,63 +67,18 @@ jobs:
     - name: Build package
       run: npm run build
       
-    - name: Create package tarball
-      run: npm pack
-      
-    - name: Upload build artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: package-build
-        path: |
-          dist/
-          *.tgz
-        retention-days: 90
-
-  create-release:
-    needs: [check-version, build-and-test]
-    if: ${{ needs.check-version.outputs.version-changed == 'true' }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Download build artifacts
-      uses: actions/download-artifact@v4
-      with:
-        name: package-build
-        
-    - name: Generate changelog for release
-      id: changelog
+    - name: Verify package contents
       run: |
-        VERSION="v${{ needs.check-version.outputs.new-version }}"
-        echo "Generating changelog for $VERSION"
-
-        # Check if CHANGELOG.md exists
-        if [ -f "CHANGELOG.md" ]; then
-          # Extract section for current version
-          CHANGELOG_CONTENT=$(sed -n "/## \[${{ needs.check-version.outputs.new-version }}\]/,/## \[/p" CHANGELOG.md | sed '$d' | tail -n +2)
-          if [ -z "$CHANGELOG_CONTENT" ]; then
-            CHANGELOG_CONTENT="Changes in version ${{ needs.check-version.outputs.new-version }}"
-          fi
-        else
-          # Create default changelog content
-          cat > release-notes.md << 'EOF'
-        ## What's Changed
+        echo "Package contents:"
+        npm pack --dry-run
         
-        Version ${{ needs.check-version.outputs.new-version }}
+    - name: Publish to NPM
+      run: npm publish --provenance --access public
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         
-        **Full Changelog**: https://github.com/${{ github.repository }}/compare/v${{ needs.check-version.outputs.previous-version }}...v${{ needs.check-version.outputs.new-version }}
-        EOF
-          echo "changelog-file=release-notes.md" >> $GITHUB_OUTPUT
-          exit 0
-        fi
-
-        # Save changelog to file
-        echo "$CHANGELOG_CONTENT" > release-notes.md
-        echo "changelog-file=release-notes.md" >> $GITHUB_OUTPUT
+    - name: Create package tarball for release
+      run: npm pack
         
     - name: Create Git Tag
       run: |
@@ -151,10 +93,25 @@ jobs:
       with:
         tag_name: v${{ needs.check-version.outputs.new-version }}
         name: Release v${{ needs.check-version.outputs.new-version }}
-        body_path: release-notes.md
+        body: |
+          ## 🚀 Release v${{ needs.check-version.outputs.new-version }}
+          
+          ### What's Changed
+          - Version bumped from v${{ needs.check-version.outputs.previous-version }} to v${{ needs.check-version.outputs.new-version }}
+          
+          📦 **NPM Package**: https://www.npmjs.com/package/axios-har-tracker/v/${{ needs.check-version.outputs.new-version }}
+          
+          **Full Changelog**: https://github.com/${{ github.repository }}/compare/v${{ needs.check-version.outputs.previous-version }}...v${{ needs.check-version.outputs.new-version }}
         draft: false
         prerelease: false
         files: |
           *.tgz
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Create publish summary
+      run: |
+        echo "## 🎉 Release Complete!" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "✅ **NPM Published**: https://www.npmjs.com/package/axios-har-tracker/v/${{ needs.check-version.outputs.new-version }}" >> $GITHUB_STEP_SUMMARY
+        echo "✅ **GitHub Release**: ${{ github.server_url }}/${{ github.repository }}/releases/tag/v${{ needs.check-version.outputs.new-version }}" >> $GITHUB_STEP_SUMMARY

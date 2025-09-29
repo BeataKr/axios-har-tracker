@@ -39,13 +39,6 @@ This folder contains GitHub Actions configurations for the axios-har-tracker pro
   - Git tag creation
   - GitHub Release creation with assets
 
-### 5. `publish-npm.yml` - NPM Publishing
-- **Triggered**: automatically after release creation
-- **Features**:
-  - Publishes to npmjs.org
-  - Adds provenance for security
-  - Creates publication summary
-
 ## Requirements
 
 - Node.js 18.x or 20.x

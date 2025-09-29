@@ -14,13 +14,6 @@ This folder contains workflows for automatic release creation and package publis
   - Creates Git tag
   - Creates GitHub Release with attachments
 
-### 2. `publish-npm.yml` - NPM Publishing
-- **Triggered**: automatically after release creation
-- **Features**:
-  - Publishes package to npmjs.org
-  - Adds provenance for security
-  - Creates publication summary
-
 ## Configuration
 
 ### Required Secrets (for NPM)

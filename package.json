@@ -1,6 +1,6 @@
 {
   "name": "axios-har-tracker",
-  "version": "0.7.2-beta",
+  "version": "0.7.2-beta2",
   "description": "",
   "main": "dist/axios-har-tracker.js",
   "scripts": {
