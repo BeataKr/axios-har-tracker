@@ -1,3 +1,7 @@
+## 0.7.3
+
+Compute time latency on interceptors by @smikulcik https://github.com/BeataKr/axios-har-tracker/pull/23
+
 ## 0.7.2
 
 Fix changelog
