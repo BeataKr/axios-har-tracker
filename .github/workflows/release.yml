@@ -72,8 +72,41 @@ jobs:
         echo "Package contents:"
         npm pack --dry-run
         
+    - name: Check NPM authentication and package status
+      run: |
+        echo "=== NPM Authentication Check ==="
+        npm whoami
+        echo ""
+        echo "=== Package Information ==="
+        npm view axios-har-tracker versions --json || echo "Could not fetch versions"
+        echo ""
+        echo "=== Current Version Check ==="
+        CURRENT_VERSION="${{ needs.check-version.outputs.new-version }}"
+        if npm view axios-har-tracker@$CURRENT_VERSION > /dev/null 2>&1; then
+          echo "❌ Version $CURRENT_VERSION already exists on NPM"
+          exit 1
+        else
+          echo "✅ Version $CURRENT_VERSION is new"
+        fi
+        echo ""
+        echo "=== Package Ownership Check ==="
+        npm view axios-har-tracker maintainers
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        
     - name: Publish to NPM
-      run: npm publish --provenance --access public
+      run: |
+        echo "Publishing version ${{ needs.check-version.outputs.new-version }}..."
+        npm publish
+        echo "✅ Successfully published to NPM"
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        
+    - name: Verify NPM publication
+      run: |
+        echo "Waiting for NPM registry propagation..."
+        sleep 10
+        npm view axios-har-tracker@${{ needs.check-version.outputs.new-version }}
       env:
         NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         
@@ -115,3 +148,4 @@ jobs:
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "✅ **NPM Published**: https://www.npmjs.com/package/axios-har-tracker/v/${{ needs.check-version.outputs.new-version }}" >> $GITHUB_STEP_SUMMARY
         echo "✅ **GitHub Release**: ${{ github.server_url }}/${{ github.repository }}/releases/tag/v${{ needs.check-version.outputs.new-version }}" >> $GITHUB_STEP_SUMMARY
+        echo "✅ **NPM Registry**: Version ${{ needs.check-version.outputs.new-version }} published successfully" >> $GITHUB_STEP_SUMMARY
