@@ -323,7 +323,7 @@ describe("axios-har-tracker e2e tests", () => {
         { name: "Accept", value: "application/json, text/plain, */*"},
         { name: "Content-Type", value: undefined },
         { name: "Cookie", value: "testCookie=value; testCookie2=value2"},
-        { name: "User-Agent", value: "axios/1.7.7" },
+        { name: "User-Agent", value: "axios/1.12.2" },
         { name: "Accept-Encoding", value: "gzip, compress, deflate, br"}
       ],
     });
@@ -373,7 +373,7 @@ describe("axios-har-tracker e2e tests", () => {
         { name: "Accept", value: "application/json, text/plain, */*"},
         { name: "Content-Type", value: undefined },
         { name: "Cookie", value: "testCookie=value; testCookie2=value2"},
-        { name: "User-Agent", value: "axios/1.7.7" },
+        { name: "User-Agent", value: "axios/1.12.2" },
         { name: "Accept-Encoding", value: "gzip, compress, deflate, br"},
       ],
     });
