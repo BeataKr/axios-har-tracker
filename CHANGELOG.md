@@ -1,3 +1,7 @@
+## 0.8.0
+
+Support axios 1.12.2
+
 ## 0.7.3
 
 Compute time latency on interceptors by @smikulcik https://github.com/BeataKr/axios-har-tracker/pull/23
