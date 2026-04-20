@@ -41,7 +41,7 @@ jobs:
         retention-days: 30
         
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v4
+      uses: codecov/codecov-action@v6
       if: matrix.node-version == '20.x'
       with:
         file: ./coverage/lcov.info
